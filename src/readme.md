@@ -2,104 +2,185 @@
 
 ## Overview
 
-TourTube is a Node.js application inspired by YouTube and Twitter, built with Express.js, MongoDB (Mongoose), and a modular utility structure for logging, error handling, and environment management.
+TourTube is a feature-rich social media platform combining elements of YouTube and Twitter, built with Node.js, Express.js, and MongoDB. The platform supports video sharing, user interactions, comments, likes, and subscription features.
 
----
+## Tech Stack
+
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB (with Mongoose)
+- **Authentication**: JWT (jsonwebtoken)
+- **Password Security**: bcrypt
+- **Logging**: Winston, Morgan
+- **API Documentation**: Available in `/docs/api.md`
 
 ## Project Structure
 
-- **src/**
-  - **app.js**: Sets up the Express app, middleware, CORS, logging.
-  - **index.js**: Entry point; connects to MongoDB and starts the server.
-  - **db/db.js**: Handles MongoDB connection logic.
-  - **models/**: Mongoose models (user, video, comment, etc.).
-  - **utils/**: Utility modules (logger, error/response handlers, env, etc.).
-  - **routes/**: (Expected) API route definitions.
-  - **controllers/**: (Expected) Business logic for routes.
-  - **middlewares/**: (Expected) Custom Express middlewares.
+```
+src/
+├── app.js           # Express app setup & middleware config
+├── index.js         # Application entry point
+├── controllers/     # Route controllers
+├── db/             # Database connection setup
+├── docs/           # API documentation
+├── middlewares/    # Custom Express middlewares
+├── models/         # Mongoose models
+├── routes/         # API routes
+└── utils/          # Utility functions and classes
+```
 
----
+## Core Features
 
-## Key Utilities & Functions
+### User Management
 
-- **logger.js**: Configures Winston for colored console and file logging.
-- **env.js**: Loads environment variables using dotenv.
-- **ApiError.js**: Custom error class for API error handling.
-- **ApiResponse.js**: Standardized API response class.
-- **asyncHandler.js**: Wrapper for async route handlers to catch errors.
+- User registration and authentication
+- JWT-based session management with refresh tokens
+- Profile management with avatar and cover image
+- Watch history tracking
 
----
+### Video Features
 
-## Making Changes & Updating Functions
+- Video upload and management
+- Video metadata (title, description, duration)
+- View count tracking
+- Publishing control
 
-### 1. Adding/Updating Models
+### Social Features
 
-- Define new Mongoose schemas in `src/models/`.
-- Export the model for use in controllers/routes.
+- Comments on videos
+- Like system (videos, comments, tweets)
+- User subscriptions
+- Playlist creation and management
+- Tweet functionality
 
-### 2. Adding/Updating Routes
+## Data Models
 
-- Define new routes in `src/routes/`.
-- Use controllers for business logic.
-- Use `asyncHandler` to wrap async route handlers.
+### User Model
 
-### 3. Error Handling
+- Username (unique, indexed)
+- Email (unique, indexed)
+- Full Name
+- Avatar and Cover Image
+- Watch History
+- Password (hashed)
+- Refresh Token
 
-- Throw `ApiError` in controllers for consistent error responses.
-- Customize error messages and status codes as needed.
+### Video Model
 
-### 4. Logging
+- Video File URL
+- Thumbnail URL
+- Title and Description
+- View Count
+- Duration
+- Publishing Status
+- Owner Reference
 
-- Use the `logger` utility for logging info, warnings, and errors.
-- Logs are output to both the console (with color) and `app.log` file.
+### Other Models
 
-### 5. Environment Variables
+- Comments (with mongoose-aggregate-paginate)
+- Likes (polymorphic - videos/comments/tweets)
+- Playlists
+- Subscriptions
+- Tweets
 
-- Add/update variables in `.env`.
-- Access them via `process.env` or the named exports in `env.js`.
+## Logging System
 
----
+The application uses a comprehensive logging system with:
+
+- **Winston**: For structured logging with the following features:
+  - Console output with colorization
+  - File logging to `app.log`
+  - JSON format with timestamps
+  - Configurable log levels
+- **Morgan**: HTTP request logging middleware integrated with Winston
+  - Custom format: `:method :url :status :response-time ms`
+  - Logs stored in structured JSON format
+
+## Middleware Configuration
+
+- CORS enabled with configurable origin
+- JSON body parsing (limit: 24kb)
+- URL-encoded body parsing (limit: 24kb)
+- Static file serving from 'public' directory
+- Morgan request logging
+- Express security best practices
+
+## Authentication System
+
+- JWT-based authentication with:
+  - Access tokens (expires in 3 hours)
+  - Refresh tokens (expires in 3 days)
+  - Secure token storage
+  - Password hashing using bcrypt
+  - Automatic password hashing on user creation/update
+
+## Database Architecture
+
+### MongoDB Connection
+
+- Mongoose ODM for MongoDB interaction
+- Automatic connection retry
+- Connection status logging
+- Environment-based configuration
+
+### Model Features
+
+- Mongoose aggregate pagination support
+- Timestamp tracking on all models
+- Indexed fields for optimized queries
+- Referential integrity using MongoDB references
+
+## Environment Configuration
+
+Required environment variables:
+
+- PORT (default: 8000)
+- CORS_ORIGIN (default: \*)
+- DB_NAME
+- DB_URL (MongoDB connection string)
+- ACCESS_TOKEN_SECRET
+- ACCESS_TOKEN_EXPIRE (default: 3h)
+- REFRESH_TOKEN_SECRET
+- REFRESH_TOKEN_EXPIRE (default: 3d)
+
+## API Response Format
+
+All API responses follow a standard format:
+
+```json
+{
+  "statusCode": number,
+  "data": any,
+  "message": string,
+  "success": boolean
+}
+```
+
+## Error Handling
+
+- Centralized error handling with ApiError class
+- Custom error responses
+- Async handler wrapper for route handlers
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables in `.env`
+4. Run development server: `npm run dev`
+5. Access API at `http://localhost:8000/api/v1/`
+
+## Available Scripts
+
+- `npm start` - Run production server
+- `npm run dev` - Run development server with nodemon
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
 
 ## Best Practices
 
-- Use `asyncHandler` for all async Express route handlers.
-- Return `ApiResponse` for successful API responses.
-- Throw `ApiError` for error cases.
-- Keep sensitive data out of logs and source code.
-- Use Prettier for code formatting (`npm run format`).
-
----
-
-## Next Steps
-
-- Implement missing models in `src/models/`.
-- Add controllers and routes for API endpoints.
-- Add middleware for authentication, validation, etc.
-- Write tests for critical functionality.
-
----
-
-## API Endpoints
-
-### Health Check
-
-- **URL**: `/api/v1/healtcheck`
-- **Method**: `GET`
-- **Purpose**: Verify the API service is up and running
-- **Response Format**:
-  ```json
-  {
-    "statusCode": 200,
-    "data": "ok",
-    "message": "Health check passed",
-    "success": true
-  }
-  ```
-- **Implementation**: Uses asyncHandler wrapper for error handling and returns standardized ApiResponse
-- **Location**:
-  - Route: `src/routes/healthCheck.route.js`
-  - Controller: `src/controllers/healthCheck.controller.js`
-
----
-
-This documentation should guide you and contributors in understanding, updating, and extending the codebase efficiently. For detailed changes, always refer to commit history and code comments.
+- Use asyncHandler for all async route handlers
+- Return standardized ApiResponse objects
+- Throw ApiError for error cases
+- Follow existing patterns for new features
+- Use Morgan and Winston for logging
+- Keep sensitive data in environment variables
