@@ -1,28 +1,17 @@
-import morgan from "morgan";
-import logger from "./utils/logger.js";
 import { app } from "./app.js";
-import express from "express";
-const port = 7860;
+import connectDB from "./db/db.js";
+import { PORT } from "./utils/env.js";
 
-const morganFormat = ":method :url :status :response-time ms";
+const port = PORT || 7860;
 
-app.use(express.json());
-app.use(
-  morgan(morganFormat, {
-    stream: {
-      write: (message) => {
-        const logObject = {
-          method: message.split(" ")[0],
-          url: message.split(" ")[1],
-          status: message.split(" ")[2],
-          responseTime: message.split(" ")[3],
-        };
-        logger.info(JSON.stringify(logObject));
-      },
-    },
-  })
-);
 
-app.listen(port, () => {
-  console.log(`server is running on port ${port}`);
-});
+connectDB()
+.then(() => {
+  app.listen(port, () => {
+    console.log(`server is running on port ${port}`);
+  });
+  
+})
+.catch((error) => {
+  console.log("mongoDB connection error", error);
+})
