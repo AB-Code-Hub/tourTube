@@ -5,6 +5,7 @@ dotenv.config();
 export const {
   PORT,
   CORS_ORIGIN,
+  NODE_ENV,
   DB_NAME,
   DB_URL,
   ACCESS_TOKEN_SECRET,

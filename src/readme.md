@@ -7,9 +7,11 @@ TourTube is a feature-rich social media platform combining elements of YouTube a
 ## Tech Stack
 
 - **Backend**: Node.js, Express.js
-- **Database**: MongoDB (with Mongoose)
+- **Database**: MongoDB with Mongoose
 - **Authentication**: JWT (jsonwebtoken)
 - **Password Security**: bcrypt
+- **Validation**: Joi
+- **File Handling**: Multer, Cloudinary
 - **Logging**: Winston, Morgan
 - **API Documentation**: Available in `/docs/api.md`
 
@@ -25,29 +27,32 @@ src/
 ├── middlewares/    # Custom Express middlewares
 ├── models/         # Mongoose models
 ├── routes/         # API routes
-└── utils/          # Utility functions and classes
+├── utils/          # Utility functions and classes
+└── validation/     # Request validation schemas
 ```
 
 ## Core Features
 
 ### User Management
 
-- User registration and authentication
-- JWT-based session management with refresh tokens
-- Profile management with avatar and cover image
+- User registration with validation
+- JWT-based authentication with refresh tokens
+- Profile management with avatar and cover image upload
 - Watch history tracking
+- Cloudinary integration for media storage
 
 ### Video Features
 
-- Video upload and management
-- Video metadata (title, description, duration)
+- Video upload with metadata
+- Video publishing control
 - View count tracking
-- Publishing control
+- Duration tracking
+- Thumbnail management
 
 ### Social Features
 
-- Comments on videos
-- Like system (videos, comments, tweets)
+- Comments on videos with pagination
+- Polymorphic like system (videos/comments/tweets)
 - User subscriptions
 - Playlist creation and management
 - Tweet functionality
@@ -59,178 +64,115 @@ src/
 - Username (unique, indexed)
 - Email (unique, indexed)
 - Full Name
-- Avatar and Cover Image
+- Avatar (required) and Cover Image
 - Watch History
-- Password (hashed)
+- Securely hashed password
 - Refresh Token
 
 ### Video Model
 
-- Video File URL
-- Thumbnail URL
+- Video File URL (Cloudinary)
+- Thumbnail URL (Cloudinary)
 - Title and Description
 - View Count
 - Duration
 - Publishing Status
 - Owner Reference
 
-### Other Models
+### Supporting Models
 
-- Comments (with mongoose-aggregate-paginate)
-- Likes (polymorphic - videos/comments/tweets)
+- Comments (with mongoose-aggregate-paginate-v2)
+- Likes (polymorphic references)
 - Playlists
 - Subscriptions
 - Tweets
 
-## Logging System
+## Security Features
 
-The application uses a comprehensive logging system with:
+### Request Validation
 
-- **Winston**: For structured logging with the following features:
-  - Console output with colorization
-  - File logging to `app.log`
-  - JSON format with timestamps
-  - Configurable log levels
-- **Morgan**: HTTP request logging middleware integrated with Winston
-  - Custom format: `:method :url :status :response-time ms`
-  - Logs stored in structured JSON format
+- Joi schema validation for all requests
+- Custom validation middleware
+- Input sanitization
 
-## Middleware Configuration
+### Authentication Security
 
-- CORS enabled with configurable origin
-- JSON body parsing (limit: 24kb)
-- URL-encoded body parsing (limit: 24kb)
-- Static file serving from 'public' directory
-- Morgan request logging
-- Express security best practices
-
-## Authentication System
-
-- JWT-based authentication with:
-  - Access tokens (expires in 3 hours)
-  - Refresh tokens (expires in 3 days)
-  - Secure token storage
-  - Password hashing using bcrypt
-  - Automatic password hashing on user creation/update
-
-## File Upload Architecture
-
-### Temporary Storage
-
-- Uses Multer middleware for multipart/form-data handling
-- Files stored in `./public/temp` directory
-- Original filename preservation
-- Configurable storage options
-
-### Cloud Storage (Cloudinary)
-
-- Automatic upload to Cloudinary CDN
-- Supported file types:
-  - Images (avatar, thumbnails, cover images)
-  - Videos (content uploads)
-- Resource type auto-detection
-- Automatic cleanup of temporary files
-- Secure URL generation
-
-### Upload Flow
-
-1. Client uploads file through multipart/form-data
-2. Multer intercepts and stores in temp directory
-3. File processed and uploaded to Cloudinary
-4. Temporary file automatically cleaned up
-5. Cloudinary URL stored in database
-
-## Security Measures
+- JWT with access and refresh tokens
+- Token expiration (3h for access, 3d for refresh)
+- Secure cookie handling
+- CORS protection
 
 ### Password Security
 
-- Bcrypt hashing with salt rounds of 10
-- Automatic password hashing on user creation/update
-- Secure password comparison methods
+- Bcrypt hashing with pre-save hooks
+- Automatic password hashing
+- Secure password comparison
 
-### JWT Implementation
+### File Upload Security
 
-- Access Tokens
-  - Contains: user ID, email, username
-  - Expiration: 3 hours
-  - Used for API authentication
-- Refresh Tokens
-  - Contains: user ID only
-  - Expiration: 3 days
-  - Stored in user document
-  - Used for token renewal
+- File type validation
+- Size limits
+- Temporary storage cleanup
+- Secure Cloudinary integration
 
-### Request Security
+## Error Handling
 
-- CORS protection with configurable origin
-- Request size limits (24kb) for JSON/URL-encoded data
-- Secure cookie handling
-- Protected routes using JWT verification
+### Centralized System
 
-## Database Architecture
+- Custom ApiError class
+- Async handler wrapper
+- Development/Production stack traces
+- Standardized error responses
 
-### MongoDB Connection
-
-- Mongoose ODM for MongoDB interaction
-- Automatic connection retry
-- Connection status logging
-- Environment-based configuration
-
-### Model Features
-
-- Mongoose aggregate pagination support
-- Timestamp tracking on all models
-- Indexed fields for optimized queries
-- Referential integrity using MongoDB references
-
-## Environment Configuration
-
-Required environment variables:
-
-- PORT (default: 8000)
-- CORS_ORIGIN (default: \*)
-- DB_NAME
-- DB_URL (MongoDB connection string)
-- ACCESS_TOKEN_SECRET
-- ACCESS_TOKEN_EXPIRE (default: 3h)
-- REFRESH_TOKEN_SECRET
-- REFRESH_TOKEN_EXPIRE (default: 3d)
-
-## API Response Format
-
-All API responses follow a standard format:
+### Response Format
 
 ```json
 {
   "statusCode": number,
   "data": any,
   "message": string,
-  "success": boolean
+  "success": boolean,
+  "errors": string[] // For error responses
 }
 ```
 
-## Error Handling
+## Logging System
 
-### Centralized Error System
+### Winston Configuration
 
-- Custom ApiError class for consistent error format
-- Async handler wrapper for promise rejection catching
-- Standard error response structure:
-  ```json
-  {
-    "statusCode": number,
-    "data": null,
-    "message": string,
-    "success": false,
-    "errors": string[]
-  }
-  ```
+- Console output with colors
+- File logging to app.log
+- JSON format with timestamps
+- Multiple transport support
+
+### Morgan Integration
+
+- HTTP request logging
+- Custom format: `method url status response-time`
+- Integration with Winston logger
+
+## Environment Configuration
+
+Required variables in `.env`:
+
+- PORT (default: 8000)
+- CORS_ORIGIN
+- DB_NAME
+- DB_URL
+- ACCESS_TOKEN_SECRET
+- ACCESS_TOKEN_EXPIRE
+- REFRESH_TOKEN_SECRET
+- REFRESH_TOKEN_EXPIRE
+- CLOUDINARY_CLOUD_NAME
+- CLOUDINARY_API_KEY
+- CLOUDINARY_API_SECRET
+- NODE_ENV
 
 ## Getting Started
 
 1. Clone the repository
 2. Install dependencies: `npm install`
-3. Set up environment variables in `.env`
+3. Create `.env` file with required variables
 4. Run development server: `npm run dev`
 5. Access API at `http://localhost:8000/api/v1/`
 
@@ -243,9 +185,10 @@ All API responses follow a standard format:
 
 ## Best Practices
 
-- Use asyncHandler for all async route handlers
-- Return standardized ApiResponse objects
-- Throw ApiError for error cases
+- Use asyncHandler for async operations
 - Follow existing patterns for new features
+- Validate all inputs with Joi
 - Use Morgan and Winston for logging
 - Keep sensitive data in environment variables
+- Clean up temporary files
+- Handle errors consistently
