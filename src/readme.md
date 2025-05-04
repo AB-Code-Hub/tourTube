@@ -113,6 +113,60 @@ The application uses a comprehensive logging system with:
   - Password hashing using bcrypt
   - Automatic password hashing on user creation/update
 
+## File Upload Architecture
+
+### Temporary Storage
+
+- Uses Multer middleware for multipart/form-data handling
+- Files stored in `./public/temp` directory
+- Original filename preservation
+- Configurable storage options
+
+### Cloud Storage (Cloudinary)
+
+- Automatic upload to Cloudinary CDN
+- Supported file types:
+  - Images (avatar, thumbnails, cover images)
+  - Videos (content uploads)
+- Resource type auto-detection
+- Automatic cleanup of temporary files
+- Secure URL generation
+
+### Upload Flow
+
+1. Client uploads file through multipart/form-data
+2. Multer intercepts and stores in temp directory
+3. File processed and uploaded to Cloudinary
+4. Temporary file automatically cleaned up
+5. Cloudinary URL stored in database
+
+## Security Measures
+
+### Password Security
+
+- Bcrypt hashing with salt rounds of 10
+- Automatic password hashing on user creation/update
+- Secure password comparison methods
+
+### JWT Implementation
+
+- Access Tokens
+  - Contains: user ID, email, username
+  - Expiration: 3 hours
+  - Used for API authentication
+- Refresh Tokens
+  - Contains: user ID only
+  - Expiration: 3 days
+  - Stored in user document
+  - Used for token renewal
+
+### Request Security
+
+- CORS protection with configurable origin
+- Request size limits (24kb) for JSON/URL-encoded data
+- Secure cookie handling
+- Protected routes using JWT verification
+
 ## Database Architecture
 
 ### MongoDB Connection
@@ -157,9 +211,20 @@ All API responses follow a standard format:
 
 ## Error Handling
 
-- Centralized error handling with ApiError class
-- Custom error responses
-- Async handler wrapper for route handlers
+### Centralized Error System
+
+- Custom ApiError class for consistent error format
+- Async handler wrapper for promise rejection catching
+- Standard error response structure:
+  ```json
+  {
+    "statusCode": number,
+    "data": null,
+    "message": string,
+    "success": false,
+    "errors": string[]
+  }
+  ```
 
 ## Getting Started
 

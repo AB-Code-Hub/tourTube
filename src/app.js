@@ -4,9 +4,10 @@ import logger from "./utils/logger.js";
 import cors from "cors";
 import { CORS_ORIGIN } from "./utils/env.js";
 import healthCheckRouter from "./routes/healthCheck.route.js";
+import cookieParser from "cookie-parser";
 const app = express();
 
-// commond middlewares
+// common middlewares
 
 app.use(
   cors({
@@ -14,9 +15,11 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json({ limit: "24kb" }));
 app.use(express.urlencoded({ extended: true, limit: "24kb" }));
 app.use(express.static("public"));
+app.use(cookieParser())
 
 const morganFormat = ":method :url :status :response-time ms";
 app.use(

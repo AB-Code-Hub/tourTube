@@ -67,6 +67,146 @@ Verify the API service status.
 }
 ```
 
+### File Upload System
+
+#### Upload Endpoints
+
+The API uses a two-step upload process:
+
+1. File is uploaded to temporary storage
+2. File is processed and stored in Cloudinary
+
+**Temporary Storage:**
+
+- Location: `./public/temp`
+- Handled by Multer middleware
+- Supports multiple file types
+- Original filenames preserved
+
+**Cloudinary Storage:**
+
+- Automatic file type detection
+- Secure upload process
+- Temporary files are cleaned up
+- Returns secure URLs
+
+### Authentication Endpoints
+
+#### Register User
+
+**Endpoint**: `/api/v1/users/register`
+**Method**: POST
+**Content-Type**: multipart/form-data
+
+**Request Body:**
+
+```json
+{
+  "username": "string",
+  "email": "string",
+  "fullName": "string",
+  "password": "string",
+  "avatar": "file",
+  "coverImage": "file (optional)"
+}
+```
+
+#### Login
+
+**Endpoint**: `/api/v1/users/login`
+**Method**: POST
+
+**Request Body:**
+
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "user": {},
+    "accessToken": "string",
+    "refreshToken": "string"
+  },
+  "message": "User logged in successfully",
+  "success": true
+}
+```
+
+#### Refresh Token
+
+**Endpoint**: `/api/v1/users/refresh-token`
+**Method**: POST
+
+**Request Body:**
+
+```json
+{
+  "refreshToken": "string"
+}
+```
+
+### Video Management
+
+#### Upload Video
+
+**Endpoint**: `/api/v1/videos/upload`
+**Method**: POST
+**Authentication**: Required
+**Content-Type**: multipart/form-data
+
+**Request Body:**
+
+```json
+{
+  "title": "string",
+  "description": "string",
+  "videoFile": "file",
+  "thumbnail": "file",
+  "isPublished": "boolean (optional)"
+}
+```
+
+### Social Features
+
+#### Create Comment
+
+**Endpoint**: `/api/v1/comments`
+**Method**: POST
+**Authentication**: Required
+
+**Request Body:**
+
+```json
+{
+  "content": "string",
+  "videoId": "string"
+}
+```
+
+#### Like/Unlike
+
+**Endpoint**: `/api/v1/likes/{type}/{id}`
+**Method**: POST
+**Authentication**: Required
+**Parameters:**
+
+- type: "video" | "comment" | "tweet"
+- id: Object ID of the content
+
+#### Subscribe/Unsubscribe
+
+**Endpoint**: `/api/v1/subscriptions/{channelId}`
+**Method**: POST
+**Authentication**: Required
+
 ## Implementation Notes
 
 ### Error Handling
