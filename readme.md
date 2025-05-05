@@ -21,11 +21,11 @@ TourTube is a feature-rich social media platform combining elements of YouTube a
 src/
 ├── app.js           # Express app setup & middleware config
 ├── index.js         # Application entry point
-├── controllers/     # Route controllers
+├── controllers/     # Route controllers (user, health)
 ├── db/             # Database connection setup
 ├── docs/           # API documentation
 ├── middlewares/    # Custom Express middlewares
-├── models/         # Mongoose models
+├── models/         # Mongoose models (user, video, etc.)
 ├── routes/         # API routes
 ├── utils/          # Utility functions and classes
 └── validation/     # Request validation schemas
@@ -35,8 +35,11 @@ src/
 
 ### User Management
 
-- User registration with validation
-- JWT-based authentication with refresh tokens
+- User registration with email/username validation
+- Secure JWT-based authentication system
+  - Access tokens (3h expiry)
+  - Refresh tokens (3d expiry)
+  - Secure HTTP-only cookies
 - Profile management with avatar and cover image upload
 - Watch history tracking
 - Cloudinary integration for media storage
@@ -61,13 +64,13 @@ src/
 
 ### User Model
 
-- Username (unique, indexed)
-- Email (unique, indexed)
-- Full Name
+- Username (unique, indexed, lowercase)
+- Email (unique, indexed, lowercase)
+- Full Name (indexed)
 - Avatar (required) and Cover Image
-- Watch History
+- Watch History with Video references
 - Securely hashed password
-- Refresh Token
+- Refresh Token management
 
 ### Video Model
 
@@ -89,39 +92,48 @@ src/
 
 ## Security Features
 
+### Authentication & Authorization
+
+- JWT-based token system
+  - Short-lived access tokens (3h)
+  - Long-lived refresh tokens (3d)
+  - Secure cookie implementation
+  - HTTP-only cookie flags
+  - Production-ready security configurations
+
 ### Request Validation
 
 - Joi schema validation for all requests
 - Custom validation middleware
 - Input sanitization
-
-### Authentication Security
-
-- JWT with access and refresh tokens
-- Token expiration (3h for access, 3d for refresh)
-- Secure cookie handling
-- CORS protection
+- File type validation
 
 ### Password Security
 
 - Bcrypt hashing with pre-save hooks
 - Automatic password hashing
 - Secure password comparison
+- No plain-text password storage
 
 ### File Upload Security
 
+- Multer for temporary storage
 - File type validation
-- Size limits
-- Temporary storage cleanup
+- Size limits enforcement
+- Automatic temporary file cleanup
 - Secure Cloudinary integration
+  - Automatic format optimization
+  - Quality adjustment
+  - Resolution limits (1280x720)
+  - Secure URL generation
 
 ## Error Handling
 
 ### Centralized System
 
-- Custom ApiError class
-- Async handler wrapper
-- Development/Production stack traces
+- Custom ApiError class for consistent errors
+- Async handler wrapper for all controllers
+- Environment-based stack traces
 - Standardized error responses
 
 ### Response Format
@@ -140,16 +152,18 @@ src/
 
 ### Winston Configuration
 
-- Console output with colors
-- File logging to app.log
-- JSON format with timestamps
+- Console output with color coding
+- JSON format logging
+- Timestamp integration
+- File-based logging (app.log)
 - Multiple transport support
 
 ### Morgan Integration
 
 - HTTP request logging
-- Custom format: `method url status response-time`
-- Integration with Winston logger
+- Custom format: `method url status response-time ms`
+- Winston logger integration
+- Request tracking
 
 ## Environment Configuration
 
@@ -176,6 +190,15 @@ Required variables in `.env`:
 4. Run development server: `npm run dev`
 5. Access API at `http://localhost:8000/api/v1/`
 
+## API Routes
+
+- **Health Check**: `GET /api/v1/healthcheck`
+- **User Registration**: `POST /api/v1/users/register`
+- **User Login**: `POST /api/v1/users/login`
+- **Token Refresh**: `POST /api/v1/users/refresh-token`
+
+For detailed API documentation, see `/docs/api.md`
+
 ## Available Scripts
 
 - `npm start` - Run production server
@@ -192,3 +215,5 @@ Required variables in `.env`:
 - Keep sensitive data in environment variables
 - Clean up temporary files
 - Handle errors consistently
+- Use proper HTTP status codes
+- Implement proper security measures

@@ -11,7 +11,9 @@ All endpoints are prefixed with `/api/v1/`
 - JWT-based authentication system
 - Access tokens expire after 3 hours
 - Refresh tokens expire after 3 days
-- Tokens must be included in Authorization header:
+- Tokens are delivered via HTTP-only cookies
+- Also included in response body for external clients
+- Authorization header format for token usage:
 
 ```
 Authorization: Bearer <access_token>
@@ -27,7 +29,7 @@ Authorization: Bearer <access_token>
 
 - Configurable origin via CORS_ORIGIN environment variable
 - Credentials support enabled
-- Proper headers handling
+- Proper headers handling for secure cross-origin requests
 
 ## Standard Response Format
 
@@ -107,23 +109,19 @@ The API implements a secure two-step file upload process:
 
 Create a new user account with profile images.
 
-**Endpoint**: `/api/v1/users/register`  
+**Endpoint**: `/users/register`  
 **Method**: POST  
 **Content-Type**: multipart/form-data  
 **Authentication**: None required
 
 **Request Body:**
 
-```json
-{
-  "username": "string (required, unique)",
-  "email": "string (required, unique)",
-  "fullName": "string (required)",
-  "password": "string (required, min: 6 chars)",
-  "avatar": "file (required)",
-  "coverImage": "file (optional)"
-}
-```
+- `username`: string (required, unique, max: 50 chars)
+- `email`: string (required, unique, max: 50 chars)
+- `fullName`: string (required, max: 30 chars)
+- `password`: string (required, min: 6 chars)
+- `avatar`: file (required)
+- `coverImage`: file (optional)
 
 **Success Response:**
 
@@ -155,7 +153,7 @@ Create a new user account with profile images.
 
 Authenticate user and receive tokens.
 
-**Endpoint**: `/api/v1/users/login`  
+**Endpoint**: `/users/login`  
 **Method**: POST  
 **Content-Type**: application/json
 
@@ -163,10 +161,13 @@ Authenticate user and receive tokens.
 
 ```json
 {
-  "email": "string (required)",
-  "password": "string (required)"
+  "email": "string (optional if username provided)",
+  "username": "string (optional if email provided)",
+  "password": "string (required, min: 6 chars)"
 }
 ```
+
+Note: Either email OR username must be provided, not both.
 
 **Success Response:**
 
@@ -185,21 +186,42 @@ Authenticate user and receive tokens.
 }
 ```
 
+**Cookies Set:**
+
+- `accessToken`: HTTP-only, Secure in production
+- `refreshToken`: HTTP-only, Secure in production
+
 #### Refresh Token
 
 Get new access token using refresh token.
 
-**Endpoint**: `/api/v1/users/refresh-token`  
+**Endpoint**: `/users/refresh-token`  
 **Method**: POST  
 **Content-Type**: application/json
 
-**Request Body:**
+**Request Sources** (in order of precedence):
+
+1. Cookie: `refreshToken`
+2. Body: `{ "refreshToken": "string" }`
+
+**Success Response:**
 
 ```json
 {
-  "refreshToken": "string (required)"
+  "statusCode": 200,
+  "data": {
+    "accessToken": "string",
+    "refreshToken": "string"
+  },
+  "message": "Access token refreshed successfully",
+  "success": true
 }
 ```
+
+**Error Responses:**
+
+- 401: Invalid/Expired refresh token
+- 404: User not found
 
 ### Video Management
 
@@ -271,14 +293,18 @@ Toggle subscription to a channel.
 - Async operations wrapped with asyncHandler
 - Consistent error format across API
 - Proper cleanup on failures
-- Stack traces in development mode
+- Stack traces in development mode only
+- Mongoose error handling
+- JWT verification error handling
 
 ### File Processing
 
+- Two-step upload process:
+  1. Temporary storage with Multer
+  2. Cloud storage with Cloudinary
 - Automatic cleanup of temporary files
 - Cloudinary optimization features
-- Secure URL generation
-- Error handling with rollback
+- Error handling with rollback capability
 
 ### Database Operations
 
@@ -290,15 +316,18 @@ Toggle subscription to a channel.
 ### Security Measures
 
 - Input validation and sanitization
-- Secure password handling
+- Secure password handling with bcrypt
 - Token-based authentication
 - File type validation
 - Request size limits
 - CORS protection
+- HTTP-only cookies
+- Production security configurations
 
-### Performance
+### Performance Optimization
 
 - Efficient database queries
-- Proper indexing
-- Response pagination
+- Proper MongoDB indexing
+- Response pagination support
 - Optimized file handling
+- Cloudinary transformations
