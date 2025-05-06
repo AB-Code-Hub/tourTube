@@ -5,7 +5,7 @@ import cors from "cors";
 import { CORS_ORIGIN } from "./utils/env.js";
 import healthCheckRouter from "./routes/healthCheck.route.js";
 import cookieParser from "cookie-parser";
-import userRouter from './routes/user.route.js'
+import userRouter from "./routes/user.route.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 const app = express();
 
@@ -21,7 +21,7 @@ app.use(
 app.use(express.json({ limit: "24kb" }));
 app.use(express.urlencoded({ extended: true, limit: "24kb" }));
 app.use(express.static("public"));
-app.use(cookieParser())
+app.use(cookieParser());
 
 const morganFormat = ":method :url :status :response-time ms";
 app.use(
@@ -40,11 +40,9 @@ app.use(
   })
 );
 
-app.use("/api/v1/healtcheck", healthCheckRouter)
-app.use("/api/v1/users", userRouter)
+app.use("/api/v1/healthcheck", healthCheckRouter);
+app.use("/api/v1/users", userRouter);
 
-
-
-app.use(errorHandler)
+app.use(errorHandler);
 
 export { app };

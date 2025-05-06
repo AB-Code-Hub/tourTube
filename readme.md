@@ -192,12 +192,48 @@ Required variables in `.env`:
 
 ## API Routes
 
-- **Health Check**: `GET /api/v1/healthcheck`
-- **User Registration**: `POST /api/v1/users/register`
-- **User Login**: `POST /api/v1/users/login`
-- **Token Refresh**: `POST /api/v1/users/refresh-token`
+### Health Check
 
-For detailed API documentation, see `/docs/api.md`
+- `GET /api/v1/healthcheck` - API health verification
+
+### User Management
+
+- `POST /api/v1/users/register` - Register new user
+- `POST /api/v1/users/login` - User login
+- `POST /api/v1/users/logout` - User logout (protected)
+- `POST /api/v1/users/refresh-token` - Refresh access token
+- `GET /api/v1/users/profile` - Get current user profile (protected)
+- `POST /api/v1/users/change-password` - Change user password (protected)
+- `POST /api/v1/users/update-details` - Update account details (protected)
+- `POST /api/v1/users/update-avatar` - Update user avatar (protected)
+- `POST /api/v1/users/update-cover-image` - Update cover image (protected)
+
+For detailed API documentation including request/response formats, see `/docs/api.md`
+
+## Additional Features
+
+### Profile Management
+
+- Update account details (username, email, fullName)
+- Secure password changes
+- Avatar and cover image management
+- Profile viewing permissions
+
+### Media Processing
+
+- Automatic image optimization
+- Image format conversion
+- Resolution standardization (1280x720 max)
+- Temporary file cleanup
+- Secure URL generation
+
+### API Security
+
+- Request size limits (24kb for JSON/URL-encoded)
+- File upload validation
+- Secure cookie configuration
+- Production-ready security settings
+- CORS policy management
 
 ## Available Scripts
 

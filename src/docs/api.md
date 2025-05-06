@@ -4,52 +4,74 @@
 
 All endpoints are prefixed with `/api/v1/`
 
-## Security
+## Authentication System
 
-### Authentication
+### Token System
 
-- JWT-based authentication system
-- Access tokens expire after 3 hours
-- Refresh tokens expire after 3 days
-- Tokens are delivered via HTTP-only cookies
-- Also included in response body for external clients
-- Authorization header format for token usage:
+- Access Token (JWT)
+
+  - Expiry: 3 hours
+  - Delivered via HTTP-only cookie and response body
+  - Used for API authentication
+  - Required for protected endpoints
+
+- Refresh Token (JWT)
+  - Expiry: 3 days
+  - Stored in database
+  - Used to obtain new access tokens
+  - Delivered via HTTP-only cookie and response body
+
+### Token Usage
+
+- Bearer token in Authorization header:
 
 ```
 Authorization: Bearer <access_token>
 ```
 
-### Request Size Limits
+- Cookies (preferred for web clients)
+  - `accessToken`
+  - `refreshToken`
 
-- JSON payload limit: 24kb
-- URL-encoded payload limit: 24kb
-- File uploads: Handled by Multer with configurable limits
+## Security Features
 
-### CORS
+### Request Limits
 
-- Configurable origin via CORS_ORIGIN environment variable
-- Credentials support enabled
-- Proper headers handling for secure cross-origin requests
+- JSON body: 24kb max
+- URL-encoded data: 24kb max
+- File uploads: Configured per route
+- Rate limiting: Applied per IP
 
-## Standard Response Format
+### File Security
 
-All API responses follow this structure:
+- Two-phase upload process:
+  1. Local temporary storage (Multer)
+  2. Cloud storage (Cloudinary)
+- Automatic cleanup
+- Type validation
+- Size restrictions
+
+### CORS Policy
+
+- Origin: Configurable via CORS_ORIGIN
+- Credentials: Enabled
+- Methods: GET, POST, PUT, DELETE
+- Headers: Content-Type, Authorization
+
+## Response Format
+
+### Success Response
 
 ```json
 {
   "statusCode": number,
   "data": any,
   "message": string,
-  "success": boolean
+  "success": true
 }
 ```
 
-- `success` is automatically `false` for status codes >= 400
-- `data` contains the response payload
-- `message` provides context about the operation
-- Error responses include additional `errors` array
-
-### Error Response Format
+### Error Response
 
 ```json
 {
@@ -61,17 +83,15 @@ All API responses follow this structure:
 }
 ```
 
-## Available Endpoints
+## API Endpoints
 
 ### Health Check
 
-Verify API service status.
+GET `/healthcheck`
 
-**Endpoint**: `/healthcheck`  
-**Method**: GET  
-**Authentication**: None required
-
-#### Success Response
+- Purpose: API health verification
+- Auth: None required
+- Response: 200 OK
 
 ```json
 {
@@ -82,48 +102,22 @@ Verify API service status.
 }
 ```
 
-### File Management
-
-The API implements a secure two-step file upload process:
-
-1. Temporary Storage (Multer)
-
-   - Location: `./public/temp`
-   - Maintains original filenames
-   - Validates file types and sizes
-   - Cleans up after processing
-
-2. Permanent Storage (Cloudinary)
-   - Secure URL generation
-   - Automatic format optimization
-   - Quality auto-adjustment
-   - Attachment flags for downloads
-   - Image/Video transformations:
-     - Resolution limit: 1280x720
-     - Format auto-detection
-     - Quality optimization
-
 ### User Management
 
 #### Register User
 
-Create a new user account with profile images.
+POST `/users/register`
 
-**Endpoint**: `/users/register`  
-**Method**: POST  
-**Content-Type**: multipart/form-data  
-**Authentication**: None required
-
-**Request Body:**
-
-- `username`: string (required, unique, max: 50 chars)
-- `email`: string (required, unique, max: 50 chars)
-- `fullName`: string (required, max: 30 chars)
-- `password`: string (required, min: 6 chars)
-- `avatar`: file (required)
-- `coverImage`: file (optional)
-
-**Success Response:**
+- Auth: None required
+- Content-Type: multipart/form-data
+- Body:
+  - username\* (string, max:50)
+  - email\* (string, max:50)
+  - fullName\* (string, max:30)
+  - password\* (string, min:6)
+  - avatar\* (file)
+  - coverImage (file, optional)
+- Response: 201 Created
 
 ```json
 {
@@ -135,48 +129,43 @@ Create a new user account with profile images.
     "avatar": "string (url)",
     "coverImage": "string (url)",
     "_id": "string",
-    "createdAt": "string (ISO date)",
-    "updatedAt": "string (ISO date)"
+    "createdAt": "string",
+    "updatedAt": "string"
   },
   "message": "User registered successfully",
   "success": true
 }
 ```
 
-**Error Responses:**
+#### Login User
 
-- 400: Validation error (missing/invalid fields)
-- 409: Username/email already exists
-- 500: Server error (with cleanup of uploaded files)
+POST `/users/login`
 
-#### Login
-
-Authenticate user and receive tokens.
-
-**Endpoint**: `/users/login`  
-**Method**: POST  
-**Content-Type**: application/json
-
-**Request Body:**
+- Auth: None required
+- Content-Type: application/json
+- Body:
 
 ```json
 {
-  "email": "string (optional if username provided)",
-  "username": "string (optional if email provided)",
-  "password": "string (required, min: 6 chars)"
+  "email": "string (required if username not provided)",
+  "username": "string (required if email not provided)",
+  "password": "string (required, min:6)"
 }
 ```
 
-Note: Either email OR username must be provided, not both.
-
-**Success Response:**
+- Response: 200 OK
 
 ```json
 {
   "statusCode": 200,
   "data": {
     "user": {
-      // User object without sensitive fields
+      "_id": "string",
+      "username": "string",
+      "email": "string",
+      "fullName": "string",
+      "avatar": "string (url)",
+      "coverImage": "string (url)"
     },
     "accessToken": "string",
     "refreshToken": "string"
@@ -186,25 +175,39 @@ Note: Either email OR username must be provided, not both.
 }
 ```
 
-**Cookies Set:**
+#### Logout User
 
-- `accessToken`: HTTP-only, Secure in production
-- `refreshToken`: HTTP-only, Secure in production
+POST `/users/logout`
+
+- Auth: Required (Bearer token)
+- Response: 200 OK
+
+```json
+{
+  "statusCode": 200,
+  "data": {},
+  "message": "User logged out successfully",
+  "success": true
+}
+```
 
 #### Refresh Token
 
-Get new access token using refresh token.
+POST `/users/refresh-token`
 
-**Endpoint**: `/users/refresh-token`  
-**Method**: POST  
-**Content-Type**: application/json
+- Auth: Required (Bearer token)
+- Content-Type: application/json
+- Sources (in order):
+  1. Cookie (refreshToken)
+  2. Request body
 
-**Request Sources** (in order of precedence):
+```json
+{
+  "refreshToken": "string"
+}
+```
 
-1. Cookie: `refreshToken`
-2. Body: `{ "refreshToken": "string" }`
-
-**Success Response:**
+- Response: 200 OK
 
 ```json
 {
@@ -218,116 +221,208 @@ Get new access token using refresh token.
 }
 ```
 
-**Error Responses:**
+#### Get Current User Profile
 
-- 401: Invalid/Expired refresh token
-- 404: User not found
+GET `/users/profile`
 
-### Video Management
-
-#### Upload Video
-
-Upload a new video with metadata.
-
-**Endpoint**: `/api/v1/videos/upload`  
-**Method**: POST  
-**Authentication**: Required  
-**Content-Type**: multipart/form-data
-
-**Request Body:**
+- Auth: Required (Bearer token)
+- Response: 200 OK
 
 ```json
 {
-  "title": "string (required)",
-  "description": "string (optional)",
-  "videoFile": "file (required)",
-  "thumbnail": "file (required)",
-  "isPublished": "boolean (default: true)"
+  "statusCode": 200,
+  "data": {
+    "_id": "string",
+    "username": "string",
+    "email": "string",
+    "fullName": "string",
+    "avatar": "string (url)",
+    "coverImage": "string (url)",
+    "watchHistory": ["video_id"]
+  },
+  "message": "User retrieved successfully",
+  "success": true
 }
 ```
 
-### Social Features
+#### Change Password
 
-#### Create Comment
+POST `/users/change-password`
 
-Add a comment to a video.
-
-**Endpoint**: `/api/v1/comments`  
-**Method**: POST  
-**Authentication**: Required
-
-**Request Body:**
+- Auth: Required (Bearer token)
+- Content-Type: application/json
+- Body:
 
 ```json
 {
-  "content": "string (required)",
-  "videoId": "string (required)"
+  "currentPassword": "string (min:6)",
+  "newPassword": "string (min:6)"
 }
 ```
 
-#### Like/Unlike Content
+- Response: 200 OK
 
-Toggle like status on content.
+```json
+{
+  "statusCode": 200,
+  "data": {},
+  "message": "Password changed successfully",
+  "success": true
+}
+```
 
-**Endpoint**: `/api/v1/likes/{type}/{id}`  
-**Method**: POST  
-**Authentication**: Required
+#### Update Account Details
 
-**Parameters:**
+POST `/users/update-details`
 
-- type: "video" | "comment" | "tweet"
-- id: ObjectId of content
+- Auth: Required (Bearer token)
+- Content-Type: application/json
+- Body:
 
-#### Manage Subscriptions
+```json
+{
+  "fullName": "string (max:30)",
+  "email": "string (max:50)",
+  "username": "string (max:50)"
+}
+```
 
-Toggle subscription to a channel.
+- Response: 200 OK
 
-**Endpoint**: `/api/v1/subscriptions/{channelId}`  
-**Method**: POST  
-**Authentication**: Required
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "string",
+    "username": "string",
+    "email": "string",
+    "fullName": "string",
+    "avatar": "string (url)",
+    "coverImage": "string (url)"
+  },
+  "message": "Account details updated successfully",
+  "success": true
+}
+```
 
-## Implementation Details
+#### Update Avatar
+
+POST `/users/update-avatar`
+
+- Auth: Required (Bearer token)
+- Content-Type: multipart/form-data
+- Body:
+  - avatar\* (file)
+- Response: 200 OK
+
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "string",
+    "username": "string",
+    "email": "string",
+    "fullName": "string",
+    "avatar": "string (url)",
+    "coverImage": "string (url)"
+  },
+  "message": "Avatar updated successfully",
+  "success": true
+}
+```
+
+#### Update Cover Image
+
+POST `/users/update-cover-image`
+
+- Auth: Required (Bearer token)
+- Content-Type: multipart/form-data
+- Body:
+  - coverImage\* (file)
+- Response: 200 OK
+
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "string",
+    "username": "string",
+    "email": "string",
+    "fullName": "string",
+    "avatar": "string (url)",
+    "coverImage": "string (url)"
+  },
+  "message": "Cover image updated successfully",
+  "success": true
+}
+```
+
+## Error Codes
+
+- 200: Success
+- 201: Created
+- 400: Bad Request (validation errors)
+- 401: Unauthorized (invalid/missing token)
+- 403: Forbidden (insufficient permissions)
+- 404: Not Found
+- 409: Conflict (e.g., duplicate username)
+- 429: Too Many Requests
+- 500: Internal Server Error
+
+## File Upload Details
+
+### Supported Formats
+
+- Images: jpg, jpeg, png, gif
+- Videos: mp4, mov, webm
+- Max file sizes configured per route
+
+### Cloudinary Integration
+
+- Auto-optimization
+- Format conversion
+- Quality adjustment
+- Secure URL generation
+- Resolution limits:
+  - Images: 1280x720 max
+  - Videos: HD ready
+
+## Development Notes
+
+### Environment Variables
+
+Required in `.env`:
+
+```
+PORT=8000
+CORS_ORIGIN=*
+DB_NAME="tourTube"
+DB_URL=mongodb+srv://...
+ACCESS_TOKEN_SECRET=your_secret
+ACCESS_TOKEN_EXPIRE=3h
+REFRESH_TOKEN_SECRET=your_secret
+REFRESH_TOKEN_EXPIRE=3d
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+NODE_ENV=development
+```
 
 ### Error Handling
 
-- Async operations wrapped with asyncHandler
-- Consistent error format across API
+- Consistent format across API
+- Stack traces in development
+- Sanitized responses in production
 - Proper cleanup on failures
-- Stack traces in development mode only
 - Mongoose error handling
-- JWT verification error handling
-
-### File Processing
-
-- Two-step upload process:
-  1. Temporary storage with Multer
-  2. Cloud storage with Cloudinary
-- Automatic cleanup of temporary files
-- Cloudinary optimization features
-- Error handling with rollback capability
-
-### Database Operations
-
-- Proper indexing for performance
-- Aggregate pagination support
-- Optimized queries
-- Proper data validation
+- JWT verification errors
 
 ### Security Measures
 
-- Input validation and sanitization
-- Secure password handling with bcrypt
-- Token-based authentication
-- File type validation
-- Request size limits
-- CORS protection
+- Password hashing (bcrypt)
 - HTTP-only cookies
-- Production security configurations
-
-### Performance Optimization
-
-- Efficient database queries
-- Proper MongoDB indexing
-- Response pagination support
-- Optimized file handling
-- Cloudinary transformations
+- CORS protection
+- Input validation
+- File type checking
+- Request size limits
+- Secure headers
