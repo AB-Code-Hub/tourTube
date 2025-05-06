@@ -164,8 +164,28 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refreshToken: null,
+      },
+    },
+    { new: true }
+  );
 
+  const options = {
+    httpOnly: true,
+    secure: NODE_ENV === "production",
+  };
 
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "user logged out successfully"));
+});
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRerfreshToken =
@@ -212,10 +232,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       );
   } catch (error) {
     console.error("Error refreshing access token:", error);
-    throw new ApiError(401, "Invalid refresh token"); 
+    throw new ApiError(401, "Invalid refresh token");
   }
 });
 
 
 
-export { registerUser, loginUser, refreshAccessToken };
+
+
+export { registerUser, loginUser, refreshAccessToken, logoutUser };
