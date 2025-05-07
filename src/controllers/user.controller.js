@@ -251,6 +251,8 @@ const updateUserPassword = asyncHandler(async (req, res) => {
 
   const isPaswordValid = await user.isPasswordCorrect(currentPassword);
 
+  
+
   if (!isPaswordValid) {
     throw new ApiError(400, "current password is incorrect");
   }
@@ -291,7 +293,7 @@ const updateAcoountDetails = asyncHandler(async (req, res) => {
       $set: {
         fullName,
         email,
-        username: username.toLowerCase(),
+        username: username?.toLowerCase(),
       },
     },
     { new: true }
@@ -317,6 +319,12 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   try {
     avatar = await uploadOnCloudinary(avatarLocalPath);
   } catch (error) {
+    
+    if (avatar) {
+      await deleteFromCloudinary(avatar.public_id);
+    }
+
+   
     console.error(error);
     throw new ApiError(
       400,
@@ -353,12 +361,17 @@ const updateUserCoverimage = asyncHandler(async (req, res) => {
   try {
     coverImage = await uploadOnCloudinary(coverImageLocalPath);
   } catch (error) {
+    if (coverImage) {
+      await deleteFromCloudinary(coverImage.public_id);
+    }
     console.error(error);
     throw new ApiError(
       400,
       error?.details[0]?.message || "coverimage failed to upload"
     );
   }
+
+  
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -378,6 +391,85 @@ const updateUserCoverimage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Cover image updated successfully"));
 });
 
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const {username} = req.params;
+
+    if(!username?.trim()) {
+        throw new ApiError(400, "username is required")
+    }
+
+    const channel = await User.aggregate([
+      {
+        $match: {username: username?.toLowerCase()?.trim()}
+      },
+
+      {
+        $lookup: {
+          from: "subscriptions",
+          localField: "_id",
+          foreignField: "channel",
+          as: "subscribers"
+        }
+      },
+
+      {
+        $lookup: {
+          from: "subscriptions",
+          localField: "_id",
+          foreignField: "subscriber",
+          as: "subscribedTo"
+        }
+      }, 
+
+      {
+        $addFields: {
+          subscribersCount : {
+            $size: "$subscribers"
+          }, 
+          
+            channelSubscribedToCount: {
+            $size: "$subscribedTo"
+            },
+
+            isSubscribed: {
+              $cond: {
+                if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                then: true,
+                else: false,
+              }
+            }
+          
+        }
+      },
+
+      {
+        $project: {
+          fullName: 1,
+          username: 1,
+          avatar: 1,
+          subscribersCount: 1,
+          channelSubscribedToCount: 1,
+          isSubscribed: 1,
+          coverImage: 1,
+          avatar: 1,
+          createdAt: 1,
+          email: 1,
+        }
+      }
+    ])
+    if(!channel?.length)
+    {
+      throw new ApiError(404, "username is required")
+    }
+
+    return res.status(200).json(new ApiResponse(200, channel[0], "channel profile fetched successfully"))
+
+})
+
+const getUserWatchHistory = asyncHandler(async (req, res) => {
+  
+})
+
 export {
   registerUser,
   loginUser,
@@ -388,4 +480,5 @@ export {
   updateAcoountDetails,
   updateUserAvatar,
   updateUserCoverimage,
+  getUserChannelProfile
 };

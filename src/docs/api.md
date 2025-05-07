@@ -357,6 +357,32 @@ POST `/users/update-cover-image`
 }
 ```
 
+#### Get Channel Profile
+
+GET `/users/channel/:username`
+
+- Auth: Required (Bearer token)
+- Response: 200 OK
+
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "fullName": "string",
+    "username": "string",
+    "avatar": "string (url)",
+    "coverImage": "string (url)",
+    "email": "string",
+    "subscribersCount": number,
+    "channelSubscribedToCount": number,
+    "isSubscribed": boolean,
+    "createdAt": "string"
+  },
+  "message": "Channel profile fetched successfully",
+  "success": true
+}
+```
+
 ## Error Codes
 
 - 200: Success

@@ -207,10 +207,17 @@ Required variables in `.env`:
 - `POST /api/v1/users/update-details` - Update account details (protected)
 - `POST /api/v1/users/update-avatar` - Update user avatar (protected)
 - `POST /api/v1/users/update-cover-image` - Update cover image (protected)
+- `GET /api/v1/users/channel/:username` - Get channel profile with subscription info (protected)
 
 For detailed API documentation including request/response formats, see `/docs/api.md`
 
 ## Additional Features
+
+### Channel Management
+- View channel profiles with subscription stats
+- Track subscriber counts
+- Check subscription status
+- View channels subscribed to
 
 ### Profile Management
 
