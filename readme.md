@@ -213,7 +213,16 @@ For detailed API documentation including request/response formats, see `/docs/ap
 
 ## Additional Features
 
+### Subscription Management
+
+- User subscription system with Mongoose
+- Real-time subscriber count tracking
+- Bi-directional subscription relationships
+- Channel subscription status verification
+- Subscriber and subscription lists
+
 ### Channel Management
+
 - View channel profiles with subscription stats
 - Track subscriber counts
 - Check subscription status
@@ -228,11 +237,16 @@ For detailed API documentation including request/response formats, see `/docs/ap
 
 ### Media Processing
 
-- Automatic image optimization
-- Image format conversion
-- Resolution standardization (1280x720 max)
-- Temporary file cleanup
-- Secure URL generation
+- Automatic image/video optimization via Cloudinary
+- Smart format conversion (auto-format detection)
+- Resolution standardization:
+  - Images: 1280x720 max resolution
+  - Videos: HD ready format
+- Quality auto-adjustment for optimal file size
+- Secure attachment flags for downloads
+- Temporary file cleanup with fs.unlinkSync
+- Secure URL generation with Cloudinary
+- Error handling for failed uploads
 
 ### API Security
 

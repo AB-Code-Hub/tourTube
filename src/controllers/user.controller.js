@@ -14,6 +14,8 @@ import {
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { NODE_ENV, REFRESH_TOKEN_SECRET } from "../utils/env.js";
 import jwt from "jsonwebtoken";
+import { BlackListToken } from "../models/blackListToken.model.js";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   const user = await User.findById(userId);
@@ -167,6 +169,16 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
+  const accessToken = req.cookies?.accessToken;
+  const refreshToken = req.cookies?.refreshToken;
+
+  if (accessToken) {
+    await BlackListToken.create({ token: accessToken });
+  }
+  if (refreshToken) {
+    await BlackListToken.create({ token: refreshToken });
+  }
+
   await User.findByIdAndUpdate(
     req.user._id,
     {
@@ -243,6 +255,11 @@ const updateUserPassword = asyncHandler(async (req, res) => {
 
   const { currentPassword, newPassword } = req.body;
 
+  if (currentPassword === newPassword) {
+    throw new ApiError(400, "new password must be different from current one");
+  }
+  
+
   const user = await User.findById(req.user?._id);
 
   if (!user) {
@@ -250,8 +267,6 @@ const updateUserPassword = asyncHandler(async (req, res) => {
   }
 
   const isPaswordValid = await user.isPasswordCorrect(currentPassword);
-
-  
 
   if (!isPaswordValid) {
     throw new ApiError(400, "current password is incorrect");
@@ -319,12 +334,10 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   try {
     avatar = await uploadOnCloudinary(avatarLocalPath);
   } catch (error) {
-    
     if (avatar) {
       await deleteFromCloudinary(avatar.public_id);
     }
 
-   
     console.error(error);
     throw new ApiError(
       400,
@@ -371,7 +384,6 @@ const updateUserCoverimage = asyncHandler(async (req, res) => {
     );
   }
 
-  
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -392,83 +404,129 @@ const updateUserCoverimage = asyncHandler(async (req, res) => {
 });
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-    const {username} = req.params;
+  const { username } = req.params;
 
-    if(!username?.trim()) {
-        throw new ApiError(400, "username is required")
-    }
+  if (!username?.trim()) {
+    throw new ApiError(400, "username is required");
+  }
 
-    const channel = await User.aggregate([
-      {
-        $match: {username: username?.toLowerCase()?.trim()}
-      },
-
-      {
-        $lookup: {
-          from: "subscriptions",
-          localField: "_id",
-          foreignField: "channel",
-          as: "subscribers"
-        }
-      },
-
-      {
-        $lookup: {
-          from: "subscriptions",
-          localField: "_id",
-          foreignField: "subscriber",
-          as: "subscribedTo"
-        }
-      }, 
-
-      {
-        $addFields: {
-          subscribersCount : {
-            $size: "$subscribers"
-          }, 
-          
-            channelSubscribedToCount: {
-            $size: "$subscribedTo"
-            },
-
-            isSubscribed: {
-              $cond: {
-                if: {$in: [req.user?._id, "$subscribers.subscriber"]},
-                then: true,
-                else: false,
-              }
-            }
-          
-        }
-      },
-
-      {
-        $project: {
-          fullName: 1,
-          username: 1,
-          avatar: 1,
-          subscribersCount: 1,
-          channelSubscribedToCount: 1,
-          isSubscribed: 1,
-          coverImage: 1,
-          avatar: 1,
-          createdAt: 1,
-          email: 1,
-        }
-      }
-    ])
-    if(!channel?.length)
+  const channel = await User.aggregate([
     {
-      throw new ApiError(404, "username is required")
-    }
+      $match: { username: username?.toLowerCase()?.trim() },
+    },
 
-    return res.status(200).json(new ApiResponse(200, channel[0], "channel profile fetched successfully"))
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
 
-})
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+
+        channelSubscribedToCount: {
+          $size: "$subscribedTo",
+        },
+
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        avatar: 1,
+        subscribersCount: 1,
+        channelSubscribedToCount: 1,
+        isSubscribed: 1,
+        coverImage: 1,
+        avatar: 1,
+        createdAt: 1,
+        email: 1,
+      },
+    },
+  ]);
+  if (!channel?.length) {
+    throw new ApiError(404, "username is required");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "channel profile fetched successfully")
+    );
+});
 
 const getUserWatchHistory = asyncHandler(async (req, res) => {
-  
-})
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user?._id),
+      }
+    },
+
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+
+        pipeline: [
+
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [{
+                $project: {
+                  fullName: 1,
+                  username: 1,
+                  avatar: 1,
+                }
+              }]
+            }
+          }, 
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner"
+              }
+            }
+          }
+        ]
+      }
+    }
+
+
+  ])
+
+  return res.status(200).json(new ApiResponse(200, user[0]?.watchHistory, "watch history fetched successfully"))
+});
 
 export {
   registerUser,
@@ -480,5 +538,6 @@ export {
   updateAcoountDetails,
   updateUserAvatar,
   updateUserCoverimage,
-  getUserChannelProfile
+  getUserChannelProfile,
+  getUserWatchHistory,
 };

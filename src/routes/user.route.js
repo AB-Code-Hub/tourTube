@@ -10,6 +10,7 @@ import {
   updateUserCoverimage,
   getCurrentUser,
   getUserChannelProfile,
+  getUserWatchHistory,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJwtToken } from "../middlewares/auth.middleware.js";
@@ -33,26 +34,28 @@ router.route("/register").post(
 
 router.route("/login").post(loginUser);
 
+router.route("/refresh-token").post(refreshAccessToken);
+
 // secured routes
 
 router.route("/logout").post(verifyJwtToken, logoutUser);
-
-router.route("/refresh-token").post(refreshAccessToken);
 
 router.route("/profile").get(verifyJwtToken, getCurrentUser);
 
 router.route("/change-password").post(verifyJwtToken, updateUserPassword);
 
-router.route("/update-details").post(verifyJwtToken, updateAcoountDetails);
+router.route("/update-details").put(verifyJwtToken, updateAcoountDetails);
 
 router
   .route("/update-avatar")
-  .post(verifyJwtToken, upload.single("avatar"), updateUserAvatar);
+  .patch(verifyJwtToken, upload.single("avatar"), updateUserAvatar);
 
 router
   .route("/update-coverimage")
-  .post(verifyJwtToken, upload.single("coverImage"), updateUserCoverimage);
+  .patch(verifyJwtToken, upload.single("coverImage"), updateUserCoverimage);
 
 router.route("/channel/:username").get(verifyJwtToken, getUserChannelProfile);
+
+router.route("/history").get(verifyJwtToken, getUserWatchHistory);
 
 export default router;
