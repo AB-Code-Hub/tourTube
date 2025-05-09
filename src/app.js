@@ -6,6 +6,8 @@ import { CORS_ORIGIN } from "./utils/env.js";
 import healthCheckRouter from "./routes/healthCheck.route.js";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.route.js";
+import videoRouter from "./routes/video.route.js";
+
 import { errorHandler } from "./middlewares/error.middleware.js";
 const app = express();
 
@@ -42,6 +44,8 @@ app.use(
 
 app.use("/api/v1/healthcheck", healthCheckRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/videos", videoRouter);
+
 
 app.use(errorHandler);
 
