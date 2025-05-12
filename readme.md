@@ -1,8 +1,7 @@
 
-
 ## Overview
 
-TourTube is a feature-rich social media platform combining elements of YouTube and Twitter, built with Node.js, Express.js, and MongoDB. The platform supports video sharing, user interactions, comments, likes, and subscription features.
+TourTube is a feature-rich social media platform combining elements of YouTube and Twitter, built with Node.js, Express.js, and MongoDB. The platform supports video sharing, user interactions, comments, likes, and subscription features, with optimized MongoDB aggregation pipelines for efficient data retrieval.
 
 ## Tech Stack
 
@@ -40,9 +39,11 @@ src/
   - Access tokens (3h expiry)
   - Refresh tokens (3d expiry)
   - Secure HTTP-only cookies
+  - Token blacklisting for security
 - Profile management with avatar and cover image upload
-- Watch history tracking
+- Watch history tracking with aggregated video details
 - Cloudinary integration for media storage
+- Channel profile with aggregated statistics
 
 ### Video Features
 
@@ -56,305 +57,160 @@ src/
   - View count tracking
   - Duration tracking
   - Thumbnail management
-  - Update video details
-  - Delete video with cleanup
+  - Update video details with validation
+  - Delete video with associated data cleanup
 - Video discovery
-  - Pagination support
-  - Search by title
-  - Sorting options (timestamp, views, etc.)
+  - Advanced pagination with aggregation
+  - Search by title with regex support
+  - Multiple sorting options (timestamp, views, likes)
   - Filter by user/channel
+  - Performance-optimized queries
 - Video engagement
-  - Like/unlike functionality
-  - Comments system with pagination
-  - Watch history tracking per user
+  - Like/unlike functionality with count tracking
+  - Aggregated comments system
+  - Real-time watch history tracking
+  - View count analytics
 
 ### Social Features
 
 - Comments System
-
-  - Nested comment support
-  - Pagination with mongoose-aggregate-paginate-v2
-  - Edit and delete functionality
-  - Owner identification
+  - Nested comments support
+  - Advanced pagination with aggregation
+  - Edit and delete functionality with authorization
+  - Owner details in responses
   - Timestamp tracking
-  - Like/unlike support
-  - Performance optimized aggregation pipelines
+  - Like/unlike support with counts
+  - Aggregated comment retrieval
+  - Performance-optimized queries
 
 - Like System
-
   - Polymorphic like functionality
-    - Videos
-    - Comments
-    - Tweets
-  - Like count tracking
-  - User-specific like status
-  - Optimized queries for like status checks
+    - Videos with like counts
+    - Comments with aggregated stats
+    - Tweets with engagement tracking
+  - Real-time like status updates
+  - Optimized aggregation pipelines
   - Atomic operations for consistency
+  - Batch operations for cleanup
 
 - Subscription System
-
-  - Channel subscriptions
-  - Real-time subscriber count
-  - Bi-directional relationship tracking
-  - Subscription status verification
+  - Channel subscriptions with counts
+  - Real-time subscriber tracking
+  - Bi-directional relationship management
   - Aggregated subscription metrics
     - Total subscriber count
-    - Channels subscribed to count
-  - Subscription history with timestamps
+    - Channels subscribed count
+    - Subscription history
+  - Performance-optimized queries
 
-- Watch History
-
-  - Per-user video history tracking
-  - Automatic history updates
-  - History retrieval with video details
-  - Aggregated history with video metadata
-  - Channel information in history
+- Dashboard System
+  - Channel statistics
+    - Total video views
+    - Total subscribers
+    - Total video count
+    - Total likes received
+  - Performance analytics
+    - Last 30 days trends
+    - Daily view statistics
+    - Engagement metrics
+  - Content management
+    - Video listing with filters
+    - Sorting and pagination
+    - Search functionality
 
 - Tweet System
   - Text-based updates
-  - Media attachment support
-  - Like functionality
+  - Like functionality with counts
   - User engagement tracking
-  - Timeline aggregation
+  - Aggregated responses
+  - Performance-optimized queries
 
-## Data Models
+## API Optimizations
 
-### User Model
+### Database Queries
 
-- Username (unique, indexed, lowercase)
-- Email (unique, indexed, lowercase)
-- Full Name (indexed)
-- Avatar (required) and Cover Image
-- Watch History with Video references
-- Securely hashed password
-- Refresh Token management
+- Optimized Aggregation Pipelines
+  - Efficient data lookups
+  - Reduced memory usage
+  - Proper indexing
+  - Pipeline optimization
 
-### Video Model
+### Performance Features
 
-- Video File URL (Cloudinary)
-- Thumbnail URL (Cloudinary)
-- Title (required, searchable)
-- Description (optional)
-- View Count (default: 0)
-- Duration (required, auto-calculated)
-- Publishing Status (boolean, default: true)
-- Owner Reference (User model)
-- Timestamps (created/updated)
-- Support for aggregation pipelines
-- Mongoose-aggregate-paginate-v2 integration
+- Smart Pagination
+  - Cursor-based navigation
+  - Limit/Skip optimization
+  - Count optimization
+  - Response size management
 
-### Supporting Models
+### Security Enhancements
 
-- Comments (with mongoose-aggregate-paginate-v2)
-  - Nested comments support
-  - Comment text
-  - Video reference
-  - User reference
-- Likes (polymorphic references)
-  - Support for videos, comments, tweets
-  - User reference
-  - Target reference (video/comment/tweet)
-- Playlists
-  - Name and description
-  - Video references
-  - Owner reference
-  - Privacy settings
-- Subscriptions
-  - Subscriber reference (User)
-  - Channel reference (User)
-  - Timestamp tracking
-- Tweets
-  - Content
-  - User reference
-  - Media attachments
-  - Like support
+- Resource Authorization
+  - Owner verification
+  - Permission checks
+  - Rate limiting
+  - Input validation
 
-## Security Features
+### Error Handling
 
-### Authentication & Authorization
-
-- JWT-based token system
-  - Short-lived access tokens (3h)
-  - Long-lived refresh tokens (3d)
-  - Secure cookie implementation
-  - HTTP-only cookie flags
-  - Production-ready security configurations
-
-### Request Validation
-
-- Joi schema validation for all requests
-- Custom validation middleware
-- Input sanitization
-- File type validation
-
-### Password Security
-
-- Bcrypt hashing with pre-save hooks
-- Automatic password hashing
-- Secure password comparison
-- No plain-text password storage
-
-### File Upload Security
-
-- Multer middleware configuration
-  - File type validation (image/video)
-  - Size limits enforcement
-  - File count limits per request
-  - Temporary storage management
-- Automatic temporary file cleanup
-- Secure Cloudinary integration
-  - Automatic format optimization
-  - Video quality adjustment
-  - Resolution standardization:
-    - Images: 1280x720 max resolution
-    - Videos: HD ready format
-  - Duration metadata extraction
-  - Secure URL generation
-  - Public ID management
-  - Resource cleanup on error
-- Upload error handling
-  - File size validation
-  - Format validation
-  - Upload timeout management
-  - Cloudinary error handling
-  - Automatic cleanup on failure
-
-## Error Handling
-
-### Centralized System
-
-- Custom ApiError class for consistent errors
-- Async handler wrapper for all controllers
-- Environment-based stack traces
-- Standardized error responses
-
-### Response Format
-
-```json
-{
-  "statusCode": number,
-  "data": any,
-  "message": string,
-  "success": boolean,
-  "errors": string[] // For error responses
-}
-```
-
-## Logging System
-
-### Winston Configuration
-
-- Console output with color coding
-- JSON format logging
-- Timestamp integration
-- File-based logging (app.log)
-- Multiple transport support
-
-### Morgan Integration
-
-- HTTP request logging
-- Custom format: `method url status response-time ms`
-- Winston logger integration
-- Request tracking
-
-### Logging and Monitoring
-
-- Winston Logger Integration
-
-  - Custom log format
-  - Log levels configuration
-  - JSON format logging
-  - Timestamp integration
-  - Console transport
-  - File transport (app.log)
-  - Error stack traces in development
-
-- Morgan HTTP Logger
-
-  - Custom format: method, URL, status, response time
-  - Integration with Winston
-  - Request tracking
-  - Performance monitoring
-  - Error logging
-
-- Error Tracking
-
-  - Centralized error handling
-  - Error classification
-  - Stack trace preservation
-  - Error response formatting
-  - Development/Production modes
-
-- Performance Monitoring
-
-  - Response time tracking
-  - Database query monitoring
-  - File upload tracking
-  - API endpoint metrics
-  - Resource usage monitoring
-
-- Security Logging
-  - Authentication attempts
-  - Token management
-  - File operations
-  - User actions
-  - Security violations
-
-## Environment Configuration
-
-Required variables in `.env`:
-
-- PORT (default: 8000)
-- CORS_ORIGIN
-- DB_NAME
-- DB_URL
-- ACCESS_TOKEN_SECRET
-- ACCESS_TOKEN_EXPIRE
-- REFRESH_TOKEN_SECRET
-- REFRESH_TOKEN_EXPIRE
-- CLOUDINARY_CLOUD_NAME
-- CLOUDINARY_API_KEY
-- CLOUDINARY_API_SECRET
-- NODE_ENV
-
-## Getting Started
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Create `.env` file with required variables
-4. Run development server: `npm run dev`
-5. Access API at `http://localhost:8000/api/v1/`
+- Comprehensive Error Management
+  - Detailed error messages
+  - Status code mapping
+  - Error categorization
+  - Recovery strategies
 
 ## API Routes
 
-### Health Check
-
-- `GET /api/v1/healthcheck` - API health verification
-
-### User Management
-
-- `POST /api/v1/users/register` - Register new user
-- `POST /api/v1/users/login` - User login
-- `POST /api/v1/users/logout` - User logout (protected)
-- `POST /api/v1/users/refresh-token` - Refresh access token
-- `GET /api/v1/users/profile` - Get current user profile (protected)
-- `POST /api/v1/users/change-password` - Change user password (protected)
-- `POST /api/v1/users/update-details` - Update account details (protected)
-- `POST /api/v1/users/update-avatar` - Update user avatar (protected)
-- `POST /api/v1/users/update-cover-image` - Update cover image (protected)
-- `GET /api/v1/users/channel/:username` - Get channel profile with subscription info (protected)
-- `GET /api/v1/users/history` - Get user's watch history (protected)
-
 ### Video Management
 
-- `GET /api/v1/videos` - Get all videos with pagination and filters
-- `POST /api/v1/videos/publish` - Upload and publish a new video (protected)
-- `GET /api/v1/videos/:videoId` - Get video by ID (protected)
-- `PATCH /api/v1/videos/update/:videoId` - Update video details (protected)
-- `DELETE /api/v1/videos/:videoId` - Delete a video (protected)
-- `PATCH /api/v1/videos/toggle/publish/:videoId` - Toggle video publish status (protected)
+- `GET /api/v1/videos` - Get all videos with filters and aggregated data
+- `POST /api/v1/videos/publish` - Upload and publish video
+- `GET /api/v1/videos/:videoId` - Get video with aggregated stats
+- `PATCH /api/v1/videos/update/:videoId` - Update video details
+- `DELETE /api/v1/videos/:videoId` - Delete video and associated data
+- `PATCH /api/v1/videos/toggle/publish/:videoId` - Toggle publish status
 
-For detailed API documentation including request/response formats, see `/docs/api.md`
+### Comment Management
+
+- `GET /api/v1/comments/video/:videoId` - Get video comments with aggregated data
+- `POST /api/v1/comments/video/:videoId` - Create comment
+- `PATCH /api/v1/comments/:commentId` - Update comment
+- `DELETE /api/v1/comments/:commentId` - Delete comment and associated data
+
+### Like Management
+
+- `POST /api/v1/likes/videos/:videoId` - Toggle video like
+- `POST /api/v1/likes/comments/:commentId` - Toggle comment like
+- `POST /api/v1/likes/tweets/:tweetId` - Toggle tweet like
+- `GET /api/v1/likes/videos/user` - Get user's liked videos
+
+### Subscription Management
+
+- `POST /api/v1/subscriptions/c/:channelId` - Toggle subscription
+- `GET /api/v1/subscriptions/channel/:channelId/subscribers` - Get channel subscribers
+- `GET /api/v1/subscriptions/user/subscribed` - Get user's subscribed channels
+
+### Dashboard
+
+- `GET /api/v1/dashboard/stats` - Get channel statistics
+- `GET /api/v1/dashboard/videos` - Get channel videos with filters
+
+### Playlist Management
+
+- `POST /api/v1/playlists` - Create playlist
+- `GET /api/v1/playlists/user/:userId` - Get user playlists
+- `GET /api/v1/playlists/:playlistId` - Get playlist details
+- `PATCH /api/v1/playlists/:playlistId` - Update playlist
+- `DELETE /api/v1/playlists/:playlistId` - Delete playlist
+- `POST /api/v1/playlists/:playlistId/videos/:videoId` - Add video to playlist
+- `DELETE /api/v1/playlists/:playlistId/videos/:videoId` - Remove video from playlist
+
+### Tweet Management
+
+- `POST /api/v1/tweets` - Create tweet
+- `GET /api/v1/tweets/user/:userId` - Get user tweets
+- `PATCH /api/v1/tweets/:tweetId` - Update tweet
+- `DELETE /api/v1/tweets/:tweetId` - Delete tweet
 
 ## Additional Features
 
