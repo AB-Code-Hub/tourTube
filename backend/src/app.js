@@ -22,6 +22,10 @@ app.use(
   cors({
     origin: CORS_ORIGIN,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    maxAge: 600,
   })
 );
 
@@ -29,8 +33,6 @@ app.use(express.json({ limit: "24kb" }));
 app.use(express.urlencoded({ extended: true, limit: "24kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
-
-
 
 app.use("/api/v1/healthcheck", healthCheckRouter);
 app.use("/api/v1/users", userRouter);
@@ -41,7 +43,6 @@ app.use("/api/v1/tweets", tweetRouter);
 app.use("/api/v1/playlists", playlistRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
-
 
 app.use(errorHandler);
 
