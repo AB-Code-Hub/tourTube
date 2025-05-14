@@ -138,8 +138,8 @@ export default function RegisterPage() {
                   : "border-gray-300 hover:border-blue-400"
               }`}>
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <FiImage className="text-2xl mb-2 opacity-70" />
-                  <p className="text-sm">Upload cover image</p>
+                  <FiImage className={`text-2xl mb-2 opacity-70 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`} />
+                  <p className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Upload cover image</p>
                 </div>
                 <input
                   type="file"
@@ -181,7 +181,7 @@ export default function RegisterPage() {
                     ? "border-gray-600 hover:border-blue-500" 
                     : "border-gray-300 hover:border-blue-400"
                 }`}>
-                  <FiUser className="text-xl opacity-70" />
+                  <FiUser className={`text-xl opacity-70 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`} />
                   <input
                     type="file"
                     name="avatar"
@@ -225,7 +225,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 placeholder="yourusername"
                 className={`flex-1 py-2 px-2 focus:outline-none ${
-                  theme === "dark" ? "bg-gray-800" : "bg-white"
+                  theme === "dark" ? "bg-gray-800" : "bg-white text-gray-500"
                 }`}
               />
             </div>
@@ -260,7 +260,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 placeholder="John Doe"
                 className={`flex-1 py-2 px-2 focus:outline-none ${
-                  theme === "dark" ? "bg-gray-800" : "bg-white"
+                  theme === "dark" ? "bg-gray-800" : "bg-white text-gray-500"
                 }`}
               />
             </div>
@@ -295,7 +295,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 placeholder="your@email.com"
                 className={`flex-1 py-2 px-2 focus:outline-none ${
-                  theme === "dark" ? "bg-gray-800" : "bg-white"
+                  theme === "dark" ? "bg-gray-800" : "bg-white text-gray-500"
                 }`}
               />
             </div>
@@ -330,7 +330,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 placeholder="••••••••"
                 className={`flex-1 py-2 px-2 focus:outline-none ${
-                  theme === "dark" ? "bg-gray-800" : "bg-white"
+                  theme === "dark" ? "bg-gray-800" : "bg-white text-gray-500"
                 }`}
               />
             </div>
@@ -365,7 +365,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 placeholder="••••••••"
                 className={`flex-1 py-2 px-2 focus:outline-none ${
-                  theme === "dark" ? "bg-gray-800" : "bg-white"
+                  theme === "dark" ? "bg-gray-800" : "bg-white text-gray-500"
                 }`}
               />
             </div>

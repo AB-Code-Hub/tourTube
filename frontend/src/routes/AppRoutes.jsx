@@ -14,6 +14,7 @@ import GuestRoute from "../components/GuestRoute";
 import "react-toastify/dist/ReactToastify.css";
 import { AnimatePresence } from "framer-motion";
 import LoadingSpinner from "../components/LoadingSpinner";
+import EditProfilePage from "../pages/EditProfilePage";
 const VideoPage = lazy(() => import("../pages/VideoPage"))
 const HomePage = lazy(() => import("../pages/HomePage"));
 
@@ -51,6 +52,7 @@ export default function AppRoutes() {
                   <Route element={<PrivateRoute />}>
                     <Route path="/upload" element={<UploadPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/profile/edit" element={<EditProfilePage />} />
                   </Route>
 
                   {/* Error Handling */}
@@ -65,8 +67,8 @@ export default function AppRoutes() {
 
           {/* Toast Notifications */}
           <ToastContainer
-            position="bottom-right"
-            autoClose={5000}
+            position="top-center"
+            autoClose={3000}
             hideProgressBar={false}
             newestOnTop
             closeOnClick

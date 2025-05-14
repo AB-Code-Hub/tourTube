@@ -4,7 +4,7 @@
 
 /* Smooth theme transition */
 html {
-  @apply transition-colors duration-500;
+  @apply transition-colors duration-200;
 }
 
 body {
