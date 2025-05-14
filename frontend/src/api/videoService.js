@@ -1,4 +1,4 @@
-import client from './client';
+import client from "./client";
 
 export const fetchAllVideos = async () => await client.get("/videos");
 export const likeVideo = async (id) => await client.post(`/likes/videos/${id}`);

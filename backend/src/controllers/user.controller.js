@@ -150,10 +150,19 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong while logging in the user");
   }
 
-  const options = {
-    httpOnly: true,
-    secure: NODE_ENV === "production",
-  };
+  const options =  {
+  httpOnly: true,
+  secure: NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 3 * 60 * 60 * 1000// 3 hours
+}
+
+const refreshOption = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 3 * 24 * 60 * 60 * 1000 // 3 days
+}
 
   return res
     .status(200)
