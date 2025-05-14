@@ -12,7 +12,7 @@ import {
 
 const router = Router();
 
-// router.use(verifyJwtToken);
+router.use(verifyJwtToken);
 
 router.route("/").get(getAllVideos);
 

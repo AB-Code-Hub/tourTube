@@ -5,7 +5,6 @@ import { useTheme } from "../contexts/ThemeContext";
 import { FiUpload, FiImage, FiVideo, FiX } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-
 export default function UploadPage() {
   const [form, setForm] = useState({
     title: "",
@@ -60,14 +59,14 @@ export default function UploadPage() {
     const formData = new FormData();
     formData.append("title", form.title);
     formData.append("description", form.description);
-    formData.append("video", form.videoFile);
+    formData.append("videoFile", form.videoFile);
     formData.append("thumbnail", form.thumbnailFile);
 
     try {
       setIsUploading(true);
       setUploadProgress(0);
 
-      await axios.post("/videos/upload", formData, {
+      await axios.post("/videos/publish", formData, {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total
