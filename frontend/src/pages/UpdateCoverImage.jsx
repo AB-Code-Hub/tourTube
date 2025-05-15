@@ -37,7 +37,7 @@ const UpdateCoverImage = ({ onClose }) => {
       formData.append("coverImage", file);
 
       const response = await updateUserCoverImage(formData);
-      setUser(response.data.user);
+      setUser(response.data?.data);
       onClose();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update cover image");

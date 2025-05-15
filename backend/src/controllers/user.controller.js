@@ -150,19 +150,19 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong while logging in the user");
   }
 
-  const options =  {
-  httpOnly: true,
-  secure: NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: 3 * 60 * 60 * 1000// 3 hours
-}
+  const options = {
+    httpOnly: true,
+    secure: NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 3 * 60 * 60 * 1000, // 3 hours
+  };
 
-const refreshOption = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: 3 * 24 * 60 * 60 * 1000 // 3 days
-}
+  const refreshOption = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+  };
 
   return res
     .status(200)
@@ -267,7 +267,6 @@ const updateUserPassword = asyncHandler(async (req, res) => {
   if (currentPassword === newPassword) {
     throw new ApiError(400, "new password must be different from current one");
   }
-  
 
   const user = await User.findById(req.user?._id);
 
@@ -309,8 +308,42 @@ const updateAcoountDetails = asyncHandler(async (req, res) => {
   if (error) {
     throw new ApiError(400, error.details[0].message);
   }
-
   const { fullName, email, username } = req.body;
+
+  const currentUser = await User.findById(req.user?._id);
+  if (!currentUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (
+    currentUser.fullName === fullName &&
+    currentUser.email === email?.toLowerCase() &&
+    currentUser.username === username?.toLowerCase()
+  ) {
+    throw new ApiError(400, "No changes detected in the provided details");
+  }
+
+  const existingUser = await User.findOne({
+    $and: [
+      { _id: { $ne: req.user?._id } }, 
+      {
+        $or: [
+          { username: username?.toLowerCase() },
+          { email: email?.toLowerCase() },
+        ],
+      },
+    ],
+  });
+
+  if (existingUser) {
+    if (existingUser.username === username?.toLowerCase()) {
+      throw new ApiError(409, "Username already taken by another user");
+    }
+    if (existingUser.email === email?.toLowerCase()) {
+      throw new ApiError(409, "Email already registered to another user");
+    }
+  }
+
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -493,7 +526,7 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
     {
       $match: {
         _id: new mongoose.Types.ObjectId(req.user?._id),
-      }
+      },
     },
 
     {
@@ -504,37 +537,44 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
         as: "watchHistory",
 
         pipeline: [
-
           {
             $lookup: {
               from: "users",
               localField: "owner",
               foreignField: "_id",
               as: "owner",
-              pipeline: [{
-                $project: {
-                  fullName: 1,
-                  username: 1,
-                  avatar: 1,
-                }
-              }]
-            }
-          }, 
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
           {
             $addFields: {
               owner: {
-                $first: "$owner"
-              }
-            }
-          }
-        ]
-      }
-    }
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
 
-
-  ])
-
-  return res.status(200).json(new ApiResponse(200, user[0]?.watchHistory, "watch history fetched successfully"))
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0]?.watchHistory,
+        "watch history fetched successfully"
+      )
+    );
 });
 
 export {

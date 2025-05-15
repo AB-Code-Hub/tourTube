@@ -37,7 +37,7 @@ const UpdateAvatar = ({ onClose }) => {
       formData.append("avatar", file);
 
       const response = await updateUserAvatar(formData);
-      setUser(response.data.user);
+      setUser(response.data?.data);
       onClose();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update avatar");

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { FiUser, FiSave, FiX } from "react-icons/fi";
+import {  FiSave, FiX } from "react-icons/fi";
 import { updateUserProfile } from "../api/userService";
 import LoadingSpinner from "../components/LoadingSpinner";
 
@@ -40,7 +40,8 @@ const EditProfilePage = () => {
 
     try {
       const response = await updateUserProfile(formData);
-      setUser(response.data.user);
+      console.log("update details ===", response.data.data);
+      setUser(response?.data?.data);
       navigate(`/profile`);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update profile");

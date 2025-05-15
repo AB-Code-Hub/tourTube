@@ -282,4 +282,40 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     );
 });
 
-export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
+const checkSubscriptionStatus = asyncHandler(async (req, res) => {
+
+  const { channelId } = req.params;
+  const subscriberId = req.user?._id;
+
+  if (!isValidObjectId(channelId)) {
+    throw new ApiError(400, "Invalid channel ID");
+  }
+
+ 
+
+  // Check if channel exists
+  const channel = await User.findById(channelId);
+  if (!channel) {
+    throw new ApiError(404, "Channel not found");
+  }
+
+  const existingSubscription = await Subscription.findOne({
+    subscriber: subscriberId,
+    channel: channelId,
+  });
+
+  const totalSubscribers = await Subscription.countDocuments({
+    channel: channelId,
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      { isSubscribed: !!existingSubscription, totalSubscribers },
+      "Subscription status fetched successfully"
+    )
+  );
+
+})
+
+export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels, checkSubscriptionStatus };

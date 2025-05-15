@@ -175,45 +175,42 @@ const ProfilePage = () => {
                   Edit Profile
                 </Link>
 
-                   <button
-      onClick={() => setIsAvatarModalOpen(true)}
-      className={`flex items-center px-4 py-2 rounded-full ${
-        theme === 'dark'
-          ? 'bg-gray-700 hover:bg-gray-600'
-          : 'bg-gray-200 hover:bg-gray-300'
-      }`}
-    >
-      <FiCamera className="mr-2" />
-      Change Avatar
-    </button>
-    <button
-      onClick={() => setIsCoverModalOpen(true)}
-      className={`flex items-center px-4 py-2 rounded-full ${
-        theme === 'dark'
-          ? 'bg-gray-700 hover:bg-gray-600'
-          : 'bg-gray-200 hover:bg-gray-300'
-      }`}
-    >
-      <FiImage className="mr-2" />
-      Change Cover
-    </button>
-
+                <button
+                  onClick={() => setIsAvatarModalOpen(true)}
+                  className={`flex items-center px-4 py-2 rounded-full ${
+                    theme === "dark"
+                      ? "bg-gray-700 hover:bg-gray-600"
+                      : "bg-gray-400 hover:bg-gray-500"
+                  }`}
+                >
+                  <FiCamera className="mr-2" />
+                  Change Avatar
+                </button>
+                <button
+                  onClick={() => setIsCoverModalOpen(true)}
+                  className={`flex items-center px-4 py-2 rounded-full ${
+                    theme === "dark"
+                      ? "bg-gray-700 hover:bg-gray-600"
+                      : "bg-gray-400 hover:bg-gray-500"
+                  }`}
+                >
+                  <FiImage className="mr-2" />
+                  Change Cover
+                </button>
               </>
             )}
 
+            {isAvatarModalOpen && (
+              <div className="fixed  inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                <UpdateAvatar onClose={() => setIsAvatarModalOpen(false)} />
+              </div>
+            )}
 
-{isAvatarModalOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-    <UpdateAvatar onClose={() => setIsAvatarModalOpen(false)} />
-  </div>
-)}
-
-{isCoverModalOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-    <UpdateCoverImage onClose={() => setIsCoverModalOpen(false)} />
-  </div>
-)}
-
+            {isCoverModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                <UpdateCoverImage onClose={() => setIsCoverModalOpen(false)} />
+              </div>
+            )}
           </div>
         </div>
       </div>

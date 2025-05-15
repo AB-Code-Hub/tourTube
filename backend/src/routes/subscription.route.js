@@ -3,6 +3,7 @@ import {
   toggleSubscription,
   getUserChannelSubscribers,
   getSubscribedChannels,
+  checkSubscriptionStatus,
 } from "../controllers/subscription.controller.js";
 import { verifyJwtToken } from "../middlewares/auth.middleware.js";
 
@@ -18,5 +19,7 @@ router.route("/channel/:channelId/subscribers").get(getUserChannelSubscribers);
 
 // Get user's subscribed channels
 router.route("/user/subscribed").get(getSubscribedChannels);
+
+router.route("/check-subscription/:channelId").get(checkSubscriptionStatus)
 
 export default router;
