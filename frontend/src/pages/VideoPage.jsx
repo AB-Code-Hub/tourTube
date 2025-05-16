@@ -7,6 +7,7 @@ import {
   postComment,
   deleteComment,
   likeComment,
+  updateComment,
 } from "../api/commentService";
 import {
   subscribeToChannel,
@@ -29,8 +30,9 @@ import {
   FiEdit2,
 } from "react-icons/fi";
 import LoadingSpinner from "../components/LoadingSpinner";
-import ConfirmModal from "../components/ConfirmModal";
 import { toast } from "react-toastify";
+import VideoRecommendations from "../components/VideoRecommendations";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 
 export default function VideoPage() {
   const { id } = useParams();
@@ -47,6 +49,8 @@ export default function VideoPage() {
   const [commentToDelete, setCommentToDelete] = useState(null);
   const [subscribersCount, setSubscribersCount] = useState(0);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editedComment, setEditedComment] = useState("");
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -63,7 +67,6 @@ export default function VideoPage() {
             );
             setIsSubscribed(subRes?.data?.data?.isSubscribed || false);
             setSubscribersCount(subRes?.data?.data?.totalSubscribers);
-            
           }
 
           // Fetch comments after video data is loaded
@@ -183,6 +186,23 @@ export default function VideoPage() {
     }
   };
 
+  const handleUpdateComment = async (commentId) => {
+    try {
+      setCommentLoading(true);
+      await updateComment(commentId, editedComment);
+      const updatedComments = await fetchComments(id);
+      setComments(updatedComments.data.data?.comments || []);
+      setEditingCommentId(null);
+      setEditedComment("");
+    } catch (error) {
+      console.error("Error updating comment:", error);
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
+  // Update your commentService.js to include:
+
   if (loading) {
     return (
       <div
@@ -231,7 +251,7 @@ export default function VideoPage() {
     >
       <div className="container mx-auto px-4 py-6 lg:flex lg:space-x-6">
         {/* Main Video Content */}
-        <main>
+        <main className="lg:w-2/3">
           {/* Video Player */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -568,48 +588,118 @@ export default function VideoPage() {
                               </span>
                             </div>
                             {user?._id === comment.owner?._id && (
-                              <button
-                                onClick={() => {
-                                  setCommentToDelete(comment._id);
-                                  setShowDeleteModal(true);
-                                }}
-                                className={`p-1 rounded-full ${
-                                  theme === "dark"
-                                    ? "hover:bg-gray-700"
-                                    : "hover:bg-gray-200"
-                                }`}
-                              >
-                                <FiTrash2 size={14} className="text-red-500" />
-                              </button>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingCommentId(comment._id);
+                                    setEditedComment(comment.content);
+                                  }}
+                                  className={`p-1 rounded-full ${
+                                    theme === "dark"
+                                      ? "hover:bg-gray-700"
+                                      : "hover:bg-gray-200"
+                                  }`}
+                                >
+                                  <FiEdit2
+                                    size={14}
+                                    className="text-blue-500"
+                                  />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setCommentToDelete(comment._id);
+                                    setShowDeleteModal(true);
+                                  }}
+                                  className={`p-1 rounded-full ${
+                                    theme === "dark"
+                                      ? "hover:bg-gray-700"
+                                      : "hover:bg-gray-200"
+                                  }`}
+                                >
+                                  <FiTrash2
+                                    size={14}
+                                    className="text-red-500"
+                                  />
+                                </button>
+                              </div>
                             )}
                           </div>
-                          <p className="mt-1 whitespace-pre-line">
-                            {comment.content}
-                          </p>
-                          <div className="flex items-center mt-2 space-x-4">
-                            <button
-                              onClick={() => handleCommentLike(comment._id)}
-                              className={`flex items-center space-x-1 ${
-                                comment.likes?.includes(user?._id)
-                                  ? "text-red-500"
-                                  : theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              <FiHeart
-                                className={
-                                  comment.likes?.includes(user?._id)
-                                    ? "fill-current"
-                                    : ""
+
+                          {editingCommentId === comment._id ? (
+                            <div className="mt-2">
+                              <textarea
+                                className={`w-full p-2 rounded-lg border ${
+                                  theme === "dark"
+                                    ? "bg-gray-700 border-gray-600 text-white"
+                                    : "bg-white border-gray-300 text-gray-900"
+                                }`}
+                                value={editedComment}
+                                onChange={(e) =>
+                                  setEditedComment(e.target.value)
                                 }
-                                size={16}
+                                rows="3"
                               />
-                              <span className="text-sm">
-                                {comment.likesCount || 0}
-                              </span>
-                            </button>
-                          </div>
+                              <div className="flex justify-end space-x-2 mt-2">
+                                <button
+                                  onClick={() => setEditingCommentId(null)}
+                                  className={`px-3 py-1 rounded-lg ${
+                                    theme === "dark"
+                                      ? "bg-gray-600 hover:bg-gray-500"
+                                      : "bg-gray-200 hover:bg-gray-300"
+                                  }`}
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleUpdateComment(comment._id)
+                                  }
+                                  disabled={!editedComment.trim()}
+                                  className={`px-3 py-1 rounded-lg ${
+                                    !editedComment.trim()
+                                      ? "bg-blue-400 cursor-not-allowed"
+                                      : "bg-blue-500 hover:bg-blue-600"
+                                  } text-white`}
+                                >
+                                  {commentLoading ? (
+                                    <FiLoader className="animate-spin" />
+                                  ) : (
+                                    "Update"
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="mt-1 whitespace-pre-line">
+                                {comment.content}
+                              </p>
+                              <div className="flex items-center mt-2 space-x-4">
+                                <button
+                                  onClick={() => handleCommentLike(comment._id)}
+                                  className={`flex items-center space-x-1 ${
+                                    comment.likes?.includes(user?._id)
+                                      ? "text-red-500"
+                                      : theme === "dark"
+                                      ? "text-gray-400"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  <FiHeart
+                                    className={
+                                      comment.likes?.includes(user?._id)
+                                        ? "fill-current"
+                                        : ""
+                                    }
+                                    size={16}
+                                  />
+                                  <span className="text-sm">
+                                    {comment.likesCount || 0}
+                                  </span>
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </motion.div>
@@ -621,10 +711,18 @@ export default function VideoPage() {
         </main>
 
         {/* Sidebar - Recommended Videos */}
-        {/* <aside className="lg:w-1/3 mt-8 lg:mt-0">
+        <aside className="lg:w-1/3 mt-8 lg:mt-0">
           <VideoRecommendations currentVideoId={id} />
-        </aside> */}
+        </aside>
       </div>
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteComment}
+        title="Delete Comment"
+        message="Are you sure you want to delete this comment?"
+        theme={theme}
+      />
     </div>
   );
 }

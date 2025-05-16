@@ -86,7 +86,7 @@ const EditProfilePage = () => {
                 className={`w-full p-3 rounded-lg border ${
                   theme === 'dark'
                     ? 'bg-gray-700 border-gray-600 focus:border-blue-500'
-                    : 'bg-white border-gray-300 focus:border-blue-400'
+                    : 'bg-white text-gray-600 border-gray-300 focus:border-blue-400'
                 } focus:outline-none focus:ring-2 ${
                   theme === 'dark' ? 'focus:ring-blue-500/30' : 'focus:ring-blue-400/30'
                 }`}
@@ -101,7 +101,7 @@ const EditProfilePage = () => {
               </label>
               <div className="flex items-center">
                 <span className={`p-3 rounded-l-lg ${
-                  theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-300'
+                  theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 text-gray-600 border-gray-300'
                 } border-r-0`}>
                   @
                 </span>
@@ -113,7 +113,7 @@ const EditProfilePage = () => {
                   className={`flex-1 p-3 rounded-r-lg border ${
                     theme === 'dark'
                       ? 'bg-gray-700 border-gray-600 focus:border-blue-500'
-                      : 'bg-white border-gray-300 focus:border-blue-400'
+                      : 'bg-white text-gray-600 border-gray-300 focus:border-blue-400'
                   } focus:outline-none focus:ring-2 ${
                     theme === 'dark' ? 'focus:ring-blue-500/30' : 'focus:ring-blue-400/30'
                   }`}
@@ -135,7 +135,7 @@ const EditProfilePage = () => {
                 className={`w-full p-3 rounded-lg border ${
                   theme === 'dark'
                     ? 'bg-gray-700 border-gray-600 focus:border-blue-500'
-                    : 'bg-white border-gray-300 focus:border-blue-400'
+                    : 'bg-white text-gray-600 border-gray-300 focus:border-blue-400'
                 } focus:outline-none focus:ring-2 ${
                   theme === 'dark' ? 'focus:ring-blue-500/30' : 'focus:ring-blue-400/30'
                 }`}

@@ -241,7 +241,7 @@ const ProfilePage = () => {
           >
             <FiVideo size={48} className="mx-auto mb-4" />
             <h3 className="text-lg font-medium">No videos uploaded yet</h3>
-            {username === currentUser?.username && (
+            {/* {username === currentUser?.username && (
               <Link
                 to="/upload"
                 className={`mt-4 inline-block px-4 py-2 rounded-full ${
@@ -252,7 +252,7 @@ const ProfilePage = () => {
               >
                 Upload Your First Video
               </Link>
-            )}
+            )} */}
           </div>
         ) : (
           <motion.div
