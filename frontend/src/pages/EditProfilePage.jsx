@@ -40,7 +40,6 @@ const EditProfilePage = () => {
 
     try {
       const response = await updateUserProfile(formData);
-      console.log("update details ===", response.data.data);
       setUser(response?.data?.data);
       navigate(`/profile`);
     } catch (err) {
@@ -59,7 +58,7 @@ const EditProfilePage = () => {
               Edit Profile
             </h1>
             <button
-              onClick={() => navigate(`/profile`)}
+              onClick={() => navigate(`/profile/${user?.username}`)}
               className={`p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
             >
               <FiX size={20} />

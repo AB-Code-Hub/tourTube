@@ -15,6 +15,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AnimatePresence } from "framer-motion";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EditProfilePage from "../pages/EditProfilePage";
+import ManageVideo from "../components/ManageVideo";
 const VideoPage = lazy(() => import("../pages/VideoPage"))
 const HomePage = lazy(() => import("../pages/HomePage"));
 
@@ -52,7 +53,9 @@ export default function AppRoutes() {
                   <Route element={<PrivateRoute />}>
                     <Route path="/upload" element={<UploadPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/profile/:username" element={<ProfilePage />} />
                     <Route path="/profile/edit" element={<EditProfilePage />} />
+                    <Route path="/manage-video/:id" element={<ManageVideo />} />
                   </Route>
 
                   {/* Error Handling */}

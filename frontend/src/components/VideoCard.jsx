@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 
 export default function VideoCard({ video }) {
-    console.log(video);
     
   return (
     <Link to={`/videos/${video._id}`} className="block bg-white shadow-md rounded-lg overflow-hidden hover:shadow-xl transition">

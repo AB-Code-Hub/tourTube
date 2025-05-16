@@ -95,7 +95,7 @@ export default function Navbar() {
                       <FiUpload className="mr-2" /> Upload Video
                     </Link>
                     <Link
-                      to="/profile"
+                      to={`/profile/${user?.username}`}
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center px-4 py-2 text-sm hover:bg-blue-500 hover:text-white"
                     >

@@ -2,16 +2,20 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { motion } from "framer-motion";
-import { FiUser, FiVideo, FiUpload, FiCamera, FiImage } from "react-icons/fi";
-import { fetchUserVideos } from "../api/videoService";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  FiUser, FiVideo, FiUpload, FiCamera, FiImage, 
+  FiMoreHorizontal, FiEdit2, FiSettings, FiHeart 
+} from "react-icons/fi";
+import { fetchUserVideos, fetchUserByUsername } from "../api/videoService";
 import LoadingSpinner from "../components/LoadingSpinner";
 import UpdateAvatar from "./UpdateAvatar";
 import UpdateCoverImage from "./UpdateCoverImage";
+import { subscribeToChannel } from "../api/subscriptionService";
 
 const ProfilePage = () => {
   const { username } = useParams();
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
   const { theme } = useTheme();
   const [profileUser, setProfileUser] = useState(null);
   const [videos, setVideos] = useState([]);
@@ -19,18 +23,29 @@ const ProfilePage = () => {
   const [error, setError] = useState(null);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const isOwner = currentUser && profileUser && currentUser._id === profileUser._id;
 
   useEffect(() => {
     const loadProfileData = async () => {
       try {
         setLoading(true);
-        // In a real app, you would fetch the user profile data here
-        // For now, we'll assume it's the current user if username matches
-
+        
+        // Fetch user profile by username
+        const userResponse = await fetchUserByUsername(username);
+        setProfileUser(userResponse.data?.data);
+        
         // Fetch user's videos
-        const videosResponse = await fetchUserVideos(username);
-        setProfileUser(user);
+        const videosResponse = await fetchUserVideos(userResponse.data?.data?._id);
         setVideos(videosResponse.data?.data?.videos || []);
+        
+        if (currentUser && !isOwner) {
+          // Add your subscription check API call here
+
+          setIsSubscribed(userResponse.data?.data?.isSubscribed);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -39,14 +54,24 @@ const ProfilePage = () => {
     };
 
     loadProfileData();
-  }, [user]);
+  }, [username, currentUser]);
+
+  const handleSubscribe = async () => {
+    try {
+
+   await subscribeToChannel(profileUser?._id);
+
+      setIsSubscribed(!isSubscribed);
+    } catch (err) {
+      console.error("Subscription error:", err);
+    }
+  };
+
   if (loading) {
     return (
-      <div
-        className={`min-h-screen flex items-center justify-center ${
-          theme === "dark" ? "bg-gray-900" : "bg-gray-50"
-        }`}
-      >
+      <div className={`min-h-screen flex items-center justify-center ${
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+      }`}>
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -54,22 +79,16 @@ const ProfilePage = () => {
 
   if (error) {
     return (
-      <div
-        className={`min-h-screen flex items-center justify-center ${
-          theme === "dark"
-            ? "bg-gray-900 text-white"
-            : "bg-gray-50 text-gray-900"
-        }`}
-      >
+      <div className={`min-h-screen flex items-center justify-center ${
+        theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
+      }`}>
         <div className="text-center p-6 max-w-md">
           <h2 className="text-xl font-bold mb-2">Error Loading Profile</h2>
           <p className="mb-4">{error}</p>
           <Link
             to="/"
             className={`px-4 py-2 rounded ${
-              theme === "dark"
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-blue-500 hover:bg-blue-600"
+              theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
             } text-white inline-block`}
           >
             Go Home
@@ -80,11 +99,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div
-      className={`min-h-screen ${
-        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
-      }`}
-    >
+    <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}>
       {/* Cover Photo */}
       <div className="relative h-48 sm:h-72 w-full bg-gradient-to-r from-purple-500 to-blue-600">
         {profileUser?.coverImage && (
@@ -98,11 +113,9 @@ const ProfilePage = () => {
 
       {/* Profile Header */}
       <div className="container mx-auto px-4 -mt-16 relative z-10">
-        <div
-          className={`p-6 rounded-lg shadow-lg ${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          }`}
-        >
+        <div className={`p-6 rounded-lg shadow-lg ${
+          theme === "dark" ? "bg-gray-800" : "bg-white"
+        }`}>
           <div className="flex flex-col md:flex-row items-center md:items-end space-y-4 md:space-y-0 md:space-x-6">
             <div className="relative -mt-20">
               {profileUser?.avatar ? (
@@ -115,116 +128,153 @@ const ProfilePage = () => {
                   }}
                 />
               ) : (
-                <div
-                  className={`w-32 h-32 rounded-full border-4 flex items-center justify-center ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  }`}
-                  style={{
-                    borderColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
-                  }}
-                >
-                  <FiUser
-                    size={48}
-                    className={
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }
-                  />
+                <div className={`w-32 h-32 rounded-full border-4 flex items-center justify-center ${
+                  theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                }`}
+                style={{
+                  borderColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
+                }}>
+                  <FiUser size={48} className={theme === "dark" ? "text-gray-400" : "text-gray-500"} />
                 </div>
               )}
             </div>
 
             <div className="flex-1 text-center md:text-left">
-              <h1
-                className={`text-2xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <h1 className={`text-2xl font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}>
                 {profileUser?.fullName}
               </h1>
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
+              <p className={`text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}>
                 @{profileUser?.username}
               </p>
+              
+              {/* User stats */}
+              <div className="flex space-x-4 mt-2 text-sm">
+                <span>{videos.length} videos</span>
+                <span>{profileUser?.subscribersCount || 0} subscribers</span>
+                {!isOwner && (
+                  <span>Subscribed to {profileUser?.channelSubscribedToCount || 0} channels</span>
+                )}
+              </div>
             </div>
 
-            {user && (
-              <>
-                <Link
-                  to="/upload"
-                  className={`flex items-center px-4 py-2 rounded-full ${
-                    theme === "dark"
-                      ? "bg-blue-600 hover:bg-blue-700"
-                      : "bg-blue-500 hover:bg-blue-600"
-                  } text-white`}
-                >
-                  <FiUpload className="mr-2" />
-                  Upload Video
-                </Link>
-                <Link
-                  to="/profile/edit"
-                  className={`flex items-center px-4 py-2 rounded-full ${
-                    theme === "dark"
-                      ? "bg-blue-600 hover:bg-blue-700"
-                      : "bg-blue-500 hover:bg-blue-600"
-                  } text-white`}
-                >
-                  <FiUser className="mr-2" />
-                  Edit Profile
-                </Link>
+            <div className="flex items-center space-x-3 relative">
+              {isOwner ? (
+                <>
+                  <Link
+                    to="/upload"
+                    className={`flex items-center px-4 py-2 rounded-full ${
+                      theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+                    } text-white`}
+                  >
+                    <FiUpload className="mr-2" />
+                    Upload Video
+                  </Link>
 
-                <button
-                  onClick={() => setIsAvatarModalOpen(true)}
-                  className={`flex items-center px-4 py-2 rounded-full ${
-                    theme === "dark"
-                      ? "bg-gray-700 hover:bg-gray-600"
-                      : "bg-gray-400 hover:bg-gray-500"
-                  }`}
-                >
-                  <FiCamera className="mr-2" />
-                  Change Avatar
-                </button>
-                <button
-                  onClick={() => setIsCoverModalOpen(true)}
-                  className={`flex items-center px-4 py-2 rounded-full ${
-                    theme === "dark"
-                      ? "bg-gray-700 hover:bg-gray-600"
-                      : "bg-gray-400 hover:bg-gray-500"
-                  }`}
-                >
-                  <FiImage className="mr-2" />
-                  Change Cover
-                </button>
-              </>
-            )}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowDropdown(!showDropdown)}
+                      className={`p-2 rounded-full ${
+                        theme === "dark" ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"
+                      }`}
+                    >
+                      <FiMoreHorizontal size={20} />
+                    </button>
 
-            {isAvatarModalOpen && (
-              <div className="fixed  inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-                <UpdateAvatar onClose={() => setIsAvatarModalOpen(false)} />
-              </div>
-            )}
-
-            {isCoverModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-                <UpdateCoverImage onClose={() => setIsCoverModalOpen(false)} />
-              </div>
-            )}
+                    <AnimatePresence>
+                      {showDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 ${
+                            theme === "dark" ? "bg-gray-800" : "bg-white"
+                          }`}
+                        >
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                setIsAvatarModalOpen(true);
+                                setShowDropdown(false);
+                              }}
+                              className={`flex items-center w-full px-4 py-2 text-sm ${
+                                theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              <FiCamera className="mr-2" />
+                              Change Avatar
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsCoverModalOpen(true);
+                                setShowDropdown(false);
+                              }}
+                              className={`flex items-center w-full px-4 py-2 text-sm ${
+                                theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              <FiImage className="mr-2" />
+                              Change Cover
+                            </button>
+                            <Link
+                              to="/profile/edit"
+                              className={`flex items-center w-full px-4 py-2 text-sm ${
+                                theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              <FiEdit2 className="mr-2" />
+                              Edit Profile
+                            </Link>
+                            <Link
+                              to="/settings"
+                              className={`flex items-center w-full px-4 py-2 text-sm ${
+                                theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              <FiSettings className="mr-2" />
+                              Settings
+                            </Link>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleSubscribe}
+                    className={`flex items-center px-4 py-2 rounded-full ${
+                      isSubscribed
+                        ? theme === "dark"
+                          ? "bg-gray-600 hover:bg-gray-500"
+                          : "bg-gray-300 hover:bg-gray-400"
+                        : theme === "dark"
+                        ? "bg-red-600 hover:bg-red-700"
+                        : "bg-red-500 hover:bg-red-600"
+                    } text-white`}
+                  >
+                    <FiHeart className="mr-2" />
+                    {isSubscribed ? "Subscribed" : "Subscribe"}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Videos Section */}
       <div className="container mx-auto px-4 py-8">
-        <div
-          className={`mb-6 flex items-center justify-between ${
-            theme === "dark" ? "text-white" : "text-gray-900"
-          }`}
-        >
+        <div className={`mb-6 flex items-center justify-between ${
+          theme === "dark" ? "text-white" : "text-gray-900"
+        }`}>
           <h2 className="text-xl font-bold flex items-center">
             <FiVideo className="mr-2" />
-            Uploaded Videos
+            {isOwner ? "Your Videos" : "Videos"}
           </h2>
           <span className="text-sm">
             {videos.length} {videos.length === 1 ? "video" : "videos"}
@@ -232,27 +282,23 @@ const ProfilePage = () => {
         </div>
 
         {videos.length === 0 ? (
-          <div
-            className={`text-center py-12 rounded-lg ${
-              theme === "dark"
-                ? "bg-gray-800 text-gray-400"
-                : "bg-gray-100 text-gray-500"
-            }`}
-          >
+          <div className={`text-center py-12 rounded-lg ${
+            theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"
+          }`}>
             <FiVideo size={48} className="mx-auto mb-4" />
-            <h3 className="text-lg font-medium">No videos uploaded yet</h3>
-            {/* {username === currentUser?.username && (
+            <h3 className="text-lg font-medium">
+              {isOwner ? "You haven't uploaded any videos yet" : "No videos uploaded yet"}
+            </h3>
+            {isOwner && (
               <Link
                 to="/upload"
                 className={`mt-4 inline-block px-4 py-2 rounded-full ${
-                  theme === "dark"
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : "bg-blue-500 hover:bg-blue-600"
+                  theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
                 } text-white`}
               >
                 Upload Your First Video
               </Link>
-            )} */}
+            )}
           </div>
         ) : (
           <motion.div
@@ -278,17 +324,13 @@ const ProfilePage = () => {
                 }}
                 whileHover={{ scale: 1.03 }}
                 className={`rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${
-                  theme === "dark"
-                    ? "bg-gray-800 hover:bg-gray-750"
-                    : "bg-white hover:bg-gray-50"
+                  theme === "dark" ? "bg-gray-800 hover:bg-gray-750" : "bg-white hover:bg-gray-50"
                 }`}
               >
-                <Link to={`/videos/${video._id}`}>
-                  <div
-                    className={`relative aspect-video ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    }`}
-                  >
+                <Link to={`/video/${video._id}`}>
+                  <div className={`relative aspect-video ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  }`}>
                     <img
                       src={video.thumbnail}
                       alt={video.title}
@@ -300,18 +342,14 @@ const ProfilePage = () => {
                   </div>
 
                   <div className="p-4">
-                    <h3
-                      className={`font-semibold line-clamp-2 ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
-                    >
+                    <h3 className={`font-semibold line-clamp-2 ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}>
                       {video.title}
                     </h3>
-                    <div
-                      className="flex items-center mt-2 text-xs ${
+                    <div className={`flex items-center mt-2 text-xs ${
                       theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                    }"
-                    >
+                    }`}>
                       <span>{video.views || 0} views</span>
                       <span className="mx-1">•</span>
                       <span>
@@ -327,6 +365,19 @@ const ProfilePage = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Modals */}
+      {isAvatarModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <UpdateAvatar onClose={() => setIsAvatarModalOpen(false)} />
+        </div>
+      )}
+
+      {isCoverModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <UpdateCoverImage onClose={() => setIsCoverModalOpen(false)} />
+        </div>
+      )}
     </div>
   );
 };

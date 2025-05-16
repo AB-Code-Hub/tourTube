@@ -51,6 +51,8 @@ export default function VideoPage() {
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedComment, setEditedComment] = useState("");
+  const [showShareOptions, setShowShareOptions] = useState(false);
+const [showMoreOptions, setShowMoreOptions] = useState(false);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -285,68 +287,160 @@ export default function VideoPage() {
             </h1>
 
             {/* Video Stats */}
-            <div
-              className={`flex flex-wrap items-center justify-between mb-4 ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
+          <div className={`flex flex-wrap items-center justify-between mb-4 ${
+  theme === "dark" ? "text-gray-400" : "text-gray-600"
+}`}>
+  <div className="flex items-center space-x-4">
+    <span className="flex items-center">
+      <FiEye className="mr-1" /> {video.views || 0} views
+    </span>
+    <span className="flex items-center">
+      <FiClock className="mr-1" /> {video.duration || "0:00"}
+    </span>
+    <span className="flex items-center">
+      <FiCalendar className="mr-1" /> 
+      {new Date(video.createdAt).toLocaleDateString()}
+    </span>
+  </div>
+
+  <div className="flex items-center space-x-3 mt-2 sm:mt-0">
+    {/* Like Button (existing) */}
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      onClick={handleLike}
+      disabled={likeLoading}
+      className={`flex items-center space-x-1 px-3 py-1 rounded-full ${
+        isLiked
+          ? "bg-red-500 text-white"
+          : theme === "dark"
+          ? "bg-gray-700 hover:bg-gray-600"
+          : "bg-gray-200 hover:bg-gray-300"
+      } transition-colors`}
+    >
+      {likeLoading ? (
+        <FiLoader className="animate-spin" size={16} />
+      ) : (
+        <>
+          <FiHeart className={isLiked ? "fill-current" : ""} />
+          <span>{video.likesCount || 0}</span>
+        </>
+      )}
+    </motion.button>
+
+    {/* Share Button */}
+    <div className="relative">
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setShowShareOptions(!showShareOptions)}
+        className={`p-2 rounded-full ${
+          theme === "dark"
+            ? "bg-gray-700 hover:bg-gray-600"
+            : "bg-gray-200 hover:bg-gray-300"
+        }`}
+      >
+        <FiShare2 size={18} />
+      </motion.button>
+      
+      {/* Share Options Dropdown */}
+      {showShareOptions && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 ${
+            theme === "dark" ? "bg-gray-800" : "bg-white"
+          }`}
+        >
+          <div className="py-1">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                setShowShareOptions(false);
+                // Add toast notification if you have one
+              }}
+              className={`block w-full text-left px-4 py-2 text-sm ${
+                theme === "dark" 
+                  ? "text-gray-200 hover:bg-gray-700" 
+                  : "text-gray-700 hover:bg-gray-100"
               }`}
             >
-              <div className="flex items-center space-x-4">
-                <span className="flex items-center">
-                  <FiEye className="mr-1" /> {video.views || 0} views
-                </span>
-                <span className="flex items-center">
-                  <FiClock className="mr-1" /> {video.duration || "0:00"}
-                </span>
-                <span className="flex items-center">
-                  <FiCalendar className="mr-1" />{" "}
-                  {new Date(video.createdAt).toLocaleDateString()}
-                </span>
-              </div>
+              Copy Link
+            </button>
+            <button
+              onClick={() => {
+                window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`, '_blank');
+                setShowShareOptions(false);
+              }}
+              className={`block w-full text-left px-4 py-2 text-sm ${
+                theme === "dark" 
+                  ? "text-gray-200 hover:bg-gray-700" 
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              Share on Twitter
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </div>
 
-              <div className="flex items-center space-x-3 mt-2 sm:mt-0">
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleLike}
-                  disabled={likeLoading}
-                  className={`flex items-center space-x-1 px-3 py-1 rounded-full ${
-                    isLiked
-                      ? "bg-red-500 text-white"
-                      : theme === "dark"
-                      ? "bg-gray-700 hover:bg-gray-600"
-                      : "bg-gray-200 hover:bg-gray-300"
-                  } transition-colors`}
-                >
-                  {likeLoading ? (
-                    <FiLoader className="animate-spin" size={16} />
-                  ) : (
-                    <>
-                      <FiHeart className={isLiked ? "fill-current" : ""} />
-                      <span>{video.likesCount || 0}</span>
-                    </>
-                  )}
-                </motion.button>
-
-                <button
-                  className={`p-2 rounded-full ${
-                    theme === "dark"
-                      ? "bg-gray-700 hover:bg-gray-600"
-                      : "bg-gray-200 hover:bg-gray-300"
-                  }`}
-                >
-                  <FiShare2 size={18} />
-                </button>
-
-                <button
-                  className={`p-2 rounded-full ${
-                    theme === "dark"
-                      ? "bg-gray-700 hover:bg-gray-600"
-                      : "bg-gray-200 hover:bg-gray-300"
-                  }`}
-                >
-                  <FiMoreHorizontal size={18} />
-                </button>
-              </div>
+    {/* More Options Button */}
+    {user?._id === video.owner?._id && (
+      <div className="relative">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowMoreOptions(!showMoreOptions)}
+          className={`p-2 rounded-full ${
+            theme === "dark"
+              ? "bg-gray-700 hover:bg-gray-600"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          <FiMoreHorizontal size={18} />
+        </motion.button>
+        
+        {/* More Options Dropdown */}
+        {showMoreOptions && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <div className="py-1">
+              <Link
+                to={`/manage-video/${video._id}`}
+                className={`block px-4 py-2 text-sm ${
+                  theme === "dark" 
+                    ? "text-gray-200 hover:bg-gray-700" 
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setShowMoreOptions(false)}
+              >
+                Manage Video
+              </Link>
+              <button
+                onClick={() => {
+                  // Add delete functionality if needed
+                  setShowMoreOptions(false);
+                }}
+                className={`block w-full text-left px-4 py-2 text-sm ${
+                  theme === "dark" 
+                    ? "text-red-400 hover:bg-gray-700" 
+                    : "text-red-600 hover:bg-gray-100"
+                }`}
+              >
+                Delete Video
+              </button>
             </div>
+          </motion.div>
+        )}
+      </div>
+    )}
+  </div>
+</div>
 
             {/* Channel Info */}
             <div
@@ -355,7 +449,7 @@ export default function VideoPage() {
               }`}
             >
               <Link
-                to={`/channel/${video.owner?.username}`}
+                to={`/profile/${video.owner?.username}`}
                 className="flex items-center space-x-3"
               >
                 {video.owner?.avatar ? (
