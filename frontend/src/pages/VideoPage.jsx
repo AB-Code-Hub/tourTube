@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, data } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchVideoById, likeVideo } from "../api/videoService";
+import { fetchVideoById } from "../api/videoService";
 import {
   fetchComments,
   postComment,
   deleteComment,
-  likeComment,
   updateComment,
 } from "../api/commentService";
+import { likeComment, likeVideo } from "../api/likeService";
 import {
   subscribeToChannel,
   checkSubscription,
@@ -31,7 +31,7 @@ import {
   FiEdit,
   FiVideo,
 } from "react-icons/fi";
-import { FaTwitter, FaWhatsapp, FaInstagram, FaShareAlt } from 'react-icons/fa';
+import { FaTwitter, FaWhatsapp, FaInstagram, FaShareAlt, FaClipboard } from 'react-icons/fa';
 import LoadingSpinner from "../components/LoadingSpinner";
 import { toast } from "react-toastify";
 import VideoRecommendations from "../components/VideoRecommendations";
@@ -66,6 +66,7 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
 
         if (videoRes?.data?.data) {
           setVideo(videoRes.data.data);
+          setIsLiked(videoRes?.data?.data?.isLiked)
           if (user && videoRes.data.data.owner?._id) {
             const subRes = await checkSubscription(
               videoRes.data.data.owner._id
@@ -75,9 +76,13 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
           }
 
           // Fetch comments after video data is loaded
-          const commentsRes = await fetchComments(id);
-          setComments(commentsRes?.data?.data?.comments || []);
-          setIsLiked(videoRes?.data?.data?.isLiked || false);
+         // In your useEffect where you fetch comments
+const commentsRes = await fetchComments(id);
+setComments(commentsRes?.data?.data?.comments?.map(comment => ({
+  ...comment,
+  isLiked: comment.isLiked || false,
+  likeCount: comment.likesCount || 0
+})) || []);
         }
       } catch (error) {
         console.error("Error fetching video:", error);
@@ -92,11 +97,13 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
     }
   }, [id, user]);
 
+  
+
   const handleLike = async () => {
     try {
       setLikeLoading(true);
       const res = await likeVideo(id);
-      setIsLiked(res.data.data.isLiked);
+      setIsLiked(res.data?.data?.isLiked);
       setVideo((prev) => ({
         ...prev,
         likesCount: res.data?.data?.likeCount,
@@ -106,30 +113,29 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
     }
   };
 
-  const handleCommentLike = async (commentId) => {
-    try {
-      await likeComment(commentId);
-      setComments((prev) =>
-        prev.map((comment) => {
-          if (comment._id === commentId) {
-            const wasLiked = comment.likes?.includes(user._id);
-            return {
-              ...comment,
-              likes: wasLiked
-                ? comment.likes.filter((id) => id !== user._id)
-                : [...(comment.likes || []), user._id],
-              likesCount: wasLiked
-                ? (comment.likesCount || 0) - 1
-                : (comment.likesCount || 0) + 1,
-            };
-          }
-          return comment;
-        })
-      );
-    } catch (error) {
-      console.error("Error liking comment:", error);
-    }
-  };
+ const handleCommentLike = async (commentId) => {
+  try {
+    const res = await likeComment(commentId);
+ if(res)
+ {
+     setComments((prev) =>
+      prev.map((comment) => {
+        if (comment._id === commentId) {
+          return {
+            ...comment,
+            likeCount: res.data.data.likeCount,
+            isLiked: res.data.data.isLiked,
+          };
+        }
+        return comment;
+      })
+    );
+ }
+  } catch (error) {
+    console.error("Error liking comment:", error);
+    toast.error(error?.response?.data?.message || "Failed to like comment");
+  }
+};
   const handleSubscribe = async () => {
     if (!user) {
       toast.error("Please login to subscribe");
@@ -206,7 +212,6 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
     }
   };
 
-  // Update your commentService.js to include:
 
   if (loading) {
     return (
@@ -361,12 +366,13 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
                 setShowShareOptions(false);
                 toast.success("Link copied successfully")
               }}
-              className={`block w-full text-left px-4 py-2 text-sm ${
+              className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
                 theme === "dark" 
                   ? "text-gray-200 hover:bg-gray-700" 
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
+              <FaClipboard className="text-gray-200" />
               Copy Link
             </button>
 <>
@@ -854,28 +860,24 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
                                 {comment.content}
                               </p>
                               <div className="flex items-center mt-2 space-x-4">
-                                <button
-                                  onClick={() => handleCommentLike(comment._id)}
-                                  className={`flex items-center space-x-1 ${
-                                    comment.likes?.includes(user?._id)
-                                      ? "text-red-500"
-                                      : theme === "dark"
-                                      ? "text-gray-400"
-                                      : "text-gray-500"
-                                  }`}
-                                >
-                                  <FiHeart
-                                    className={
-                                      comment.likes?.includes(user?._id)
-                                        ? "fill-current"
-                                        : ""
-                                    }
-                                    size={16}
-                                  />
-                                  <span className="text-sm">
-                                    {comment.likesCount || 0}
-                                  </span>
-                                </button>
+                               <button
+  onClick={() => handleCommentLike(comment._id)}
+  className={`flex items-center space-x-1 ${
+    comment.isLiked
+      ? "text-red-500"
+      : theme === "dark"
+      ? "text-gray-400"
+      : "text-gray-500"
+  }`}
+>
+  <FiHeart
+    className={comment.isLiked ? "fill-current" : ""}
+    size={16}
+  />
+  <span className="text-sm">
+    {comment.likeCount || 0}
+  </span>
+</button>
                               </div>
                             </>
                           )}

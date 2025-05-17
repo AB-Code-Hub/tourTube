@@ -6,8 +6,7 @@ export const fetchComments = (videoId) =>
 export const postComment = (videoId, content) =>
   client.post(`/comments/video/${videoId}`, { content });
 
-export const likeComment = (commentId) =>
-  client.post(`/likes/comments/${commentId}`);
+
 
 export const updateComment = (commentId, content) => {
   return client.patch(`/comments/${commentId}`, { content });

@@ -15,7 +15,6 @@ export const fetchUserVideos = async (userId) => {
   const response = await client.get(`dashboard/videos/${userId}`);
   return response;
 };
-export const likeVideo = async (id) => await client.post(`/likes/videos/${id}`);
 export const uploadVideo = async (videoData) =>
   await client.post("/videos/publish", videoData);
 export const updateVideo = async (id, videoData) =>
@@ -30,5 +29,4 @@ export const toggleVideoVisibility = async (videoId) => {
 export const deleteVideo = (videoId) => {
   return client.delete(`/videos/${videoId}`);
 };
-export const createVideo = async (videoData) =>
-  await client.post("/videos/publish", videoData);
+

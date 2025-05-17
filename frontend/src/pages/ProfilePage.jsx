@@ -9,11 +9,13 @@ import {
   FiKey,
   FiFile
 } from "react-icons/fi";
-import { fetchUserVideos, fetchUserByUsername } from "../api/videoService";
+import { fetchUserVideos, fetchUserByUsername } from "../api/videoService.js";
+import { fetchLikedVideos } from "../api/likeService.js";
 import LoadingSpinner from "../components/LoadingSpinner";
 import UpdateAvatar from "./UpdateAvatar";
 import UpdateCoverImage from "./UpdateCoverImage";
 import { subscribeToChannel } from "../api/subscriptionService";
+import VideoGrid from "../components/VideoGrid.jsx";
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -27,6 +29,8 @@ const ProfilePage = () => {
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [likedVideos, setLikedVideos] = useState([]);
+const [activeTab, setActiveTab] = useState('videos');
 
   const isOwner = currentUser && profileUser && currentUser._id === profileUser._id;
 
@@ -55,6 +59,24 @@ const ProfilePage = () => {
 
     loadProfileData();
   }, [username, currentUser]);
+
+  useEffect(() => {
+  if (isOwner && activeTab === 'liked') {
+    const loadLikedVideos = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchLikedVideos();
+        setLikedVideos(response.data?.data || []);
+      } catch (err) {
+        console.error("Error loading liked videos:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadLikedVideos();
+  }
+}, [activeTab, isOwner]);
 
   const handleSubscribe = async () => {
     try {
@@ -278,103 +300,100 @@ const ProfilePage = () => {
       </div>
 
       {/* Videos Section */}
-      <div className="container mx-auto px-4 py-8">
-        <div className={`mb-6 flex items-center justify-between ${
-          theme === "dark" ? "text-white" : "text-gray-900"
-        }`}>
-          <h2 className="text-xl font-bold flex items-center">
-            <FiVideo className="mr-2" />
-            {isOwner ? "Your Videos" : "Videos"}
-          </h2>
-          <span className="text-sm">
-            {videos.length} {videos.length === 1 ? "video" : "videos"}
-          </span>
-        </div>
+     <div className="container mx-auto px-4 py-8">
+  <div className={`mb-6 flex items-center justify-between ${
+    theme === "dark" ? "text-white" : "text-gray-900"
+  }`}>
+    <div className="flex space-x-4">
+      <button
+        onClick={() => setActiveTab('videos')}
+        className={`text-xl font-bold flex items-center pb-2 border-b-2 ${
+          activeTab === 'videos'
+            ? theme === 'dark'
+              ? 'border-blue-500 text-white'
+              : 'border-blue-500 text-gray-900'
+            : theme === 'dark'
+            ? 'border-transparent text-gray-400'
+            : 'border-transparent text-gray-500'
+        }`}
+      >
+        <FiVideo className="mr-2" />
+        {isOwner ? "Your Videos" : "Videos"}
+      </button>
+      
+      {isOwner && (
+        <button
+          onClick={() => setActiveTab('liked')}
+          className={`text-xl font-bold flex items-center pb-2 border-b-2 ${
+            activeTab === 'liked'
+              ? theme === 'dark'
+                ? 'border-red-500 text-white'
+                : 'border-red-500 text-gray-900'
+              : theme === 'dark'
+              ? 'border-transparent text-gray-400'
+              : 'border-transparent text-gray-500'
+          }`}
+        >
+          <FiHeart className="mr-2" />
+          Liked Videos
+        </button>
+      )}
+    </div>
+    
+    <span className="text-sm hidden sm:block">
+      {activeTab === 'videos' 
+        ? `${videos.length} ${videos.length === 1 ? "video" : "videos"}`
+        : `${likedVideos.length} ${likedVideos.length === 1 ? "video" : "videos"}`}
+    </span>
+  </div>
 
-        {videos.length === 0 ? (
-          <div className={`text-center py-12 rounded-lg ${
-            theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"
-          }`}>
-            <FiVideo size={48} className="mx-auto mb-4" />
-            <h3 className="text-lg font-medium">
-              {isOwner ? "You haven't uploaded any videos yet" : "No videos uploaded yet"}
-            </h3>
-            {isOwner && (
-              <Link
-                to="/upload"
-                className={`mt-4 inline-block px-4 py-2 rounded-full ${
-                  theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
-                } text-white`}
-              >
-                Upload Your First Video
-              </Link>
-            )}
-          </div>
-        ) : (
-          <motion.div
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: { opacity: 0 },
-              show: {
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.1,
-                },
-              },
-            }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+  {activeTab === 'videos' ? (
+    videos.length === 0 ? (
+      <div className={`text-center py-12 rounded-lg ${
+        theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"
+      }`}>
+        <FiVideo size={48} className="mx-auto mb-4" />
+        <h3 className="text-lg font-medium">
+          {isOwner ? "You haven't uploaded any videos yet" : "No videos uploaded yet"}
+        </h3>
+        {isOwner && (
+          <Link
+            to="/upload"
+            className={`mt-4 inline-block px-4 py-2 rounded-full ${
+              theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+            } text-white`}
           >
-            {videos.map((video) => (
-              <motion.div
-                key={video._id}
-                variants={{
-                  hidden: { y: 20, opacity: 0 },
-                  show: { y: 0, opacity: 1 },
-                }}
-                whileHover={{ scale: 1.03 }}
-                className={`rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${
-                  theme === "dark" ? "bg-gray-800 hover:bg-gray-750" : "bg-white hover:bg-gray-50"
-                }`}
-              >
-                <Link to={`/videos/${video._id}`}>
-                  <div className={`relative aspect-video ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  }`}>
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-                      {video.duration || "0:00"}
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <h3 className={`font-semibold line-clamp-2 ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}>
-                      {video.title}
-                    </h3>
-                    <div className={`flex items-center mt-2 text-xs ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      <span>{video.views || 0} views</span>
-                      <span className="mx-1">•</span>
-                      <span>
-                        {video.createdAt
-                          ? new Date(video.createdAt).toLocaleDateString()
-                          : "Unknown date"}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+            Upload Your First Video
+          </Link>
         )}
       </div>
+    ) : (
+      <VideoGrid videos={videos} theme={theme} />
+    )
+  ) : (
+    // Liked videos display
+    likedVideos.length === 0 ? (
+      <div className={`text-center py-12 rounded-lg ${
+        theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"
+      }`}>
+        <FiHeart size={48} className="mx-auto mb-4" />
+        <h3 className="text-lg font-medium">
+          You haven't liked any videos yet
+        </h3>
+        <Link
+          to="/"
+          className={`mt-4 inline-block px-4 py-2 rounded-full ${
+            theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+          } text-white`}
+        >
+          Browse Videos
+        </Link>
+      </div>
+    ) : (
+      <VideoGrid videos={likedVideos.map(lv => lv.video)} theme={theme} />
+    )
+  )}
+</div>
 
       {/* Modals */}
       {isAvatarModalOpen && (

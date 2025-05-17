@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJwtToken } from "../middlewares/auth.middleware.js";
-import { createTweet, deleteTweet, getUserTweets, updateTweet } from "../controllers/tweet.controller.js";
+import { createTweet, deleteTweet, getAllTweets, getUserTweets, updateTweet } from "../controllers/tweet.controller.js";
 
 
 const router = Router();
@@ -8,10 +8,10 @@ const router = Router();
 router.use(verifyJwtToken);
 
 
-router.route("/").post(createTweet)
+router.route("/create").post(createTweet)
 router.route("/user/:userId").get(getUserTweets)
 router.route("/:tweetId").patch(updateTweet).delete(deleteTweet)
-
+router.route("/").get(getAllTweets);
 export default router;
 
 
