@@ -18,6 +18,7 @@ import EditProfilePage from "../pages/EditProfilePage";
 import ManageVideo from "../components/ManageVideo";
 import ChangePassword from "../components/ChangePassword";
 import WatchHistory from "../pages/WatchHistory";
+import VideoManagementPage from "../pages/VideoManagementPage";
 const VideoPage = lazy(() => import("../pages/VideoPage"));
 const HomePage = lazy(() => import("../pages/HomePage"));
 
@@ -57,13 +58,16 @@ export default function AppRoutes() {
                   {/* Protected Routes */}
                   <Route element={<PrivateRoute />}>
                     <Route path="/upload" element={<UploadPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
                     <Route
                       path="/profile/:username"
                       element={<ProfilePage />}
                     />
                     <Route path="/profile/edit" element={<EditProfilePage />} />
                     <Route path="/manage-video/:id" element={<ManageVideo />} />
+                    <Route
+                      path="/videos-manage"
+                      element={<VideoManagementPage />}
+                    />
                     <Route
                       path="/change-password"
                       element={<ChangePassword />}

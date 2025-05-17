@@ -28,7 +28,10 @@ import {
   FiMoreHorizontal,
   FiTrash2,
   FiEdit2,
+  FiEdit,
+  FiVideo,
 } from "react-icons/fi";
+import { FaTwitter, FaWhatsapp, FaInstagram, FaShareAlt } from 'react-icons/fa';
 import LoadingSpinner from "../components/LoadingSpinner";
 import { toast } from "react-toastify";
 import VideoRecommendations from "../components/VideoRecommendations";
@@ -356,7 +359,7 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href);
                 setShowShareOptions(false);
-                // Add toast notification if you have one
+                toast.success("Link copied successfully")
               }}
               className={`block w-full text-left px-4 py-2 text-sm ${
                 theme === "dark" 
@@ -366,19 +369,98 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
             >
               Copy Link
             </button>
-            <button
-              onClick={() => {
-                window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`, '_blank');
-                setShowShareOptions(false);
-              }}
-              className={`block w-full text-left px-4 py-2 text-sm ${
-                theme === "dark" 
-                  ? "text-gray-200 hover:bg-gray-700" 
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              Share on Twitter
-            </button>
+<>
+  {/* X */}
+  <button
+    onClick={() => {
+      window.open(
+        `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,
+        '_blank'
+      );
+      setShowShareOptions(false);
+    }}
+    className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+      theme === "dark"
+        ? "text-gray-200 hover:bg-gray-700"
+        : "text-gray-700 hover:bg-gray-100"
+    }`}
+  >
+    <FaTwitter className="text-blue-500" />
+    Share on X
+  </button>
+
+  {/* WhatsApp */}
+  <button
+    onClick={() => {
+      const url = encodeURIComponent(window.location.href);
+      window.open(`https://wa.me/?text=${url}`, '_blank');
+      setShowShareOptions(false);
+    }}
+    className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+      theme === "dark"
+        ? "text-gray-200 hover:bg-gray-700"
+        : "text-gray-700 hover:bg-gray-100"
+    }`}
+  >
+    <FaWhatsapp className="text-green-500" />
+    Share on WhatsApp
+  </button>
+
+  {/* Instagram (fallback) */}
+  <button
+    onClick={() => {
+      if (navigator.share) {
+        navigator
+          .share({
+            title: document.title,
+            url: window.location.href,
+          })
+          .catch((err) => console.error("Share failed:", err));
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Link copied! Open Instagram and paste it in your story or bio.");
+      }
+      setShowShareOptions(false);
+    }}
+    className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+      theme === "dark"
+        ? "text-gray-200 hover:bg-gray-700"
+        : "text-gray-700 hover:bg-gray-100"
+    }`}
+  >
+    <FaInstagram className="text-pink-500" />
+    Share on Instagram
+  </button>
+
+  {/* Generic Share via... */}
+  <button
+    onClick={() => {
+      if (navigator.share) {
+        navigator
+          .share({
+            title: document.title,
+            text: "Check this out!",
+            url: window.location.href,
+          })
+          .catch((err) => console.error("Web Share API failed:", err));
+      } else {
+        alert("Sharing is not supported on this device.");
+      }
+      setShowShareOptions(false);
+    }}
+    className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+      theme === "dark"
+        ? "text-gray-200 hover:bg-gray-700"
+        : "text-gray-700 hover:bg-gray-100"
+    }`}
+  >
+    <FaShareAlt className="text-gray-500" />
+    Share via…
+  </button>
+</>
+
+
+
           </div>
         </motion.div>
       )}
@@ -412,28 +494,31 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
             <div className="py-1">
               <Link
                 to={`/manage-video/${video._id}`}
-                className={`block px-4 py-2 text-sm ${
+                className={`items-center flex  px-4 py-2 text-sm ${
                   theme === "dark" 
                     ? "text-gray-200 hover:bg-gray-700" 
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setShowMoreOptions(false)}
               >
+                <FiEdit className="mr-2" />
+                Edit Video
+              </Link>
+              
+
+  <Link
+                to={`/videos-manage`}
+                className={`items-center flex px-4 py-2 text-sm ${
+                  theme === "dark" 
+                    ? "text-gray-200 hover:bg-gray-700" 
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setShowMoreOptions(false)}
+              >
+                <FiVideo className="mr-2" />
                 Manage Video
               </Link>
-              <button
-                onClick={() => {
-                  // Add delete functionality if needed
-                  setShowMoreOptions(false);
-                }}
-                className={`block w-full text-left px-4 py-2 text-sm ${
-                  theme === "dark" 
-                    ? "text-red-400 hover:bg-gray-700" 
-                    : "text-red-600 hover:bg-gray-100"
-                }`}
-              >
-                Delete Video
-              </button>
+              
             </div>
           </motion.div>
         )}

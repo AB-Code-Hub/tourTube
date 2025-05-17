@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   FiUser, FiVideo, FiUpload, FiCamera, FiImage, 
   FiMoreHorizontal, FiEdit2,  FiHeart, 
-  FiKey
+  FiKey,
+  FiFile
 } from "react-icons/fi";
 import { fetchUserVideos, fetchUserByUsername } from "../api/videoService";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -160,108 +161,118 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-3 relative">
-              {isOwner ? (
-                <>
-                  <Link
-                    to="/upload"
-                    className={`flex items-center px-4 py-2 rounded-full ${
-                      theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
-                    } text-white`}
-                  >
-                    <FiUpload className="mr-2" />
-                    Upload Video
-                  </Link>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0 relative">
+  {isOwner ? (
+    <>
+      <div className="flex flex-col xs:flex-row space-y-2 xs:space-y-0 xs:space-x-2">
+        <Link
+          to="/upload"
+          className={`flex items-center justify-center px-4 py-2 rounded-full ${
+            theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+          } text-white whitespace-nowrap`}
+        >
+          <FiUpload className="mr-2" />
+          <span className="text-sm sm:text-base">Upload Video</span>
+        </Link>
 
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowDropdown(!showDropdown)}
-                      className={`p-2 rounded-full ${
-                        theme === "dark" ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"
-                      }`}
-                    >
-                      <FiMoreHorizontal size={20} />
-                    </button>
+        <Link
+          to="/videos-manage"
+          className={`flex items-center justify-center px-4 py-2 rounded-full ${
+            theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+          } text-white whitespace-nowrap`}
+        >
+          <FiEdit2 className="mr-2" />
+          <span className="text-sm sm:text-base">Manage Videos</span>
+        </Link>
+      </div>
 
-                    <AnimatePresence>
-                      {showDropdown && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 ${
-                            theme === "dark" ? "bg-gray-800" : "bg-white"
-                          }`}
-                        >
-                          <div className="py-1">
-                            <button
-                              onClick={() => {
-                                setIsAvatarModalOpen(true);
-                                setShowDropdown(false);
-                              }}
-                              className={`flex items-center w-full px-4 py-2 text-sm ${
-                                theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              <FiCamera className="mr-2" />
-                              Change Avatar
-                            </button>
-                            <button
-                              onClick={() => {
-                                setIsCoverModalOpen(true);
-                                setShowDropdown(false);
-                              }}
-                              className={`flex items-center w-full px-4 py-2 text-sm ${
-                                theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              <FiImage className="mr-2" />
-                              Change Cover
-                            </button>
-                            <Link
-                              to="/profile/edit"
-                              className={`flex items-center w-full px-4 py-2 text-sm ${
-                                theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              <FiEdit2 className="mr-2" />
-                              Edit Profile
-                            </Link>
-                            <Link
-                              to="/change-password"
-                              className={`flex items-center w-full px-4 py-2 text-sm ${
-                                theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              <FiKey className="mr-2" />
-                              Change Password
-                            </Link>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={handleSubscribe}
-                    className={`flex items-center px-4 py-2 rounded-full ${
-                      isSubscribed
-                        ? theme === "dark"
-                          ? "bg-gray-600 hover:bg-gray-500"
-                          : "bg-gray-300 hover:bg-gray-400"
-                        : theme === "dark"
-                        ? "bg-red-600 hover:bg-red-700"
-                        : "bg-red-500 hover:bg-red-600"
-                    } text-white`}
-                  >
-                    <FiHeart className="mr-2" />
-                    {isSubscribed ? "Subscribed" : "Subscribe"}
-                  </button>
-                </>
-              )}
-            </div>
+      <div className="sm:relative pt-3 sm:pt-0 text-center">
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className={`p-2 rounded-full ${
+            theme === "dark" ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          <FiMoreHorizontal size={20} />
+        </button>
+
+        <AnimatePresence>
+          {showDropdown && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
+            >
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    setIsAvatarModalOpen(true);
+                    setShowDropdown(false);
+                  }}
+                  className={`flex items-center w-full px-4 py-2 text-sm ${
+                    theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <FiCamera className="mr-2" />
+                  Change Avatar
+                </button>
+                <button
+                  onClick={() => {
+                    setIsCoverModalOpen(true);
+                    setShowDropdown(false);
+                  }}
+                  className={`flex items-center w-full px-4 py-2 text-sm ${
+                    theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <FiImage className="mr-2" />
+                  Change Cover
+                </button>
+                <Link
+                  to="/profile/edit"
+                  className={`flex items-center w-full px-4 py-2 text-sm ${
+                    theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <FiEdit2 className="mr-2" />
+                  Edit Profile
+                </Link>
+                <Link
+                  to="/change-password"
+                  className={`flex items-center w-full px-4 py-2 text-sm ${
+                    theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <FiKey className="mr-2" />
+                  Change Password
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
+  ) : (
+    <button
+      onClick={handleSubscribe}
+      className={`flex items-center justify-center px-4 py-2 rounded-full ${
+        isSubscribed
+          ? theme === "dark"
+            ? "bg-gray-600 hover:bg-gray-500"
+            : "bg-gray-300 hover:bg-gray-400"
+          : theme === "dark"
+          ? "bg-red-600 hover:bg-red-700"
+          : "bg-red-500 hover:bg-red-600"
+      } text-white whitespace-nowrap`}
+    >
+      <FiHeart className="mr-2" />
+      {isSubscribed ? "Subscribed" : "Subscribe"}
+    </button>
+  )}
+</div>
           </div>
         </div>
       </div>
