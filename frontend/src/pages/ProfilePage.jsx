@@ -5,7 +5,8 @@ import { useTheme } from "../contexts/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FiUser, FiVideo, FiUpload, FiCamera, FiImage, 
-  FiMoreHorizontal, FiEdit2, FiSettings, FiHeart 
+  FiMoreHorizontal, FiEdit2,  FiHeart, 
+  FiKey
 } from "react-icons/fi";
 import { fetchUserVideos, fetchUserByUsername } from "../api/videoService";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -227,13 +228,13 @@ const ProfilePage = () => {
                               Edit Profile
                             </Link>
                             <Link
-                              to="/settings"
+                              to="/change-password"
                               className={`flex items-center w-full px-4 py-2 text-sm ${
                                 theme === "dark" ? "text-gray-200 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-100"
                               }`}
                             >
-                              <FiSettings className="mr-2" />
-                              Settings
+                              <FiKey className="mr-2" />
+                              Change Password
                             </Link>
                           </div>
                         </motion.div>

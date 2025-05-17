@@ -41,7 +41,7 @@ const EditProfilePage = () => {
     try {
       const response = await updateUserProfile(formData);
       setUser(response?.data?.data);
-      navigate(`/profile`);
+      navigate(`/profile/${response.data?.data?.username}`);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update profile");
     } finally {

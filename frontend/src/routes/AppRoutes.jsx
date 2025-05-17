@@ -16,7 +16,9 @@ import { AnimatePresence } from "framer-motion";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EditProfilePage from "../pages/EditProfilePage";
 import ManageVideo from "../components/ManageVideo";
-const VideoPage = lazy(() => import("../pages/VideoPage"))
+import ChangePassword from "../components/ChangePassword";
+import WatchHistory from "../pages/WatchHistory";
+const VideoPage = lazy(() => import("../pages/VideoPage"));
 const HomePage = lazy(() => import("../pages/HomePage"));
 
 export default function AppRoutes() {
@@ -37,10 +39,14 @@ export default function AppRoutes() {
                       </Suspense>
                     }
                   />
-                  <Route path="/videos/:id" element={
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <VideoPage />
-                  </Suspense>} />
+                  <Route
+                    path="/videos/:id"
+                    element={
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <VideoPage />
+                      </Suspense>
+                    }
+                  />
 
                   {/* Guest-only Routes */}
                   <Route element={<GuestRoute />}>
@@ -52,9 +58,17 @@ export default function AppRoutes() {
                   <Route element={<PrivateRoute />}>
                     <Route path="/upload" element={<UploadPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/profile/:username" element={<ProfilePage />} />
+                    <Route
+                      path="/profile/:username"
+                      element={<ProfilePage />}
+                    />
                     <Route path="/profile/edit" element={<EditProfilePage />} />
                     <Route path="/manage-video/:id" element={<ManageVideo />} />
+                    <Route
+                      path="/change-password"
+                      element={<ChangePassword />}
+                    />
+                    <Route path="/watch-history" element={<WatchHistory />} />
                   </Route>
 
                   {/* Error Handling */}

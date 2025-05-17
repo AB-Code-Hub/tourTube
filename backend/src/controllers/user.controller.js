@@ -325,7 +325,7 @@ const updateAcoountDetails = asyncHandler(async (req, res) => {
 
   const existingUser = await User.findOne({
     $and: [
-      { _id: { $ne: req.user?._id } }, 
+      { _id: { $ne: req.user?._id } },
       {
         $or: [
           { username: username?.toLowerCase() },
@@ -528,14 +528,12 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
         _id: new mongoose.Types.ObjectId(req.user?._id),
       },
     },
-
     {
       $lookup: {
         from: "videos",
         localField: "watchHistory",
         foreignField: "_id",
         as: "watchHistory",
-
         pipeline: [
           {
             $lookup: {
@@ -555,10 +553,42 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
             },
           },
           {
+            $lookup: {
+              from: "likes",
+              localField: "_id",
+              foreignField: "video",
+              as: "likes",
+            },
+          },
+          {
             $addFields: {
               owner: {
                 $first: "$owner",
               },
+              likesCount: {
+                $size: "$likes",
+              },
+              isLiked: {
+                $cond: {
+                  if: { $in: [req.user?._id, "$likes.likedBy"] },
+                  then: true,
+                  else: false,
+                },
+              },
+            },
+          },
+          {
+            $project: {
+              videoFile: 1,
+              thumbnail: 1,
+              title: 1,
+              description: 1,
+              duration: 1,
+              views: 1,
+              owner: 1,
+              createdAt: 1,
+              likesCount: 1,
+              isLiked: 1,
             },
           },
         ],

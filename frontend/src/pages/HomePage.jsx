@@ -8,6 +8,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 
 const HomePage = () => {
   const [videos, setVideos] = useState([]);
+  const [channels, setChannels] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
@@ -19,7 +20,6 @@ const HomePage = () => {
     limit: 12,
   });
   const [showFilters, setShowFilters] = useState(false);
-
   const fetchVideos = async () => {
     try {
       setLoading(true);
@@ -29,6 +29,7 @@ const HomePage = () => {
       };
       const response = await fetchAllVideos(params);
       setVideos(response.data?.data?.videos || []);
+      setChannels(response.data?.data?.channels || []);
       setError(null);
     } catch (err) {
       console.error("Failed to fetch videos:", err);
@@ -52,10 +53,10 @@ const HomePage = () => {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       [name]: value,
-      page: 1 // Reset to first page when filters change
+      page: 1, // Reset to first page when filters change
     }));
   };
 
@@ -89,7 +90,9 @@ const HomePage = () => {
     return (
       <div
         className={`min-h-screen flex items-center justify-center ${
-          theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
+          theme === "dark"
+            ? "bg-gray-900 text-white"
+            : "bg-gray-50 text-gray-900"
         }`}
       >
         <div className="text-center p-6 max-w-md">
@@ -98,7 +101,9 @@ const HomePage = () => {
           <button
             onClick={() => window.location.reload()}
             className={`px-4 py-2 rounded ${
-              theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+              theme === "dark"
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-blue-500 hover:bg-blue-600"
             } text-white`}
           >
             Retry
@@ -111,20 +116,26 @@ const HomePage = () => {
   return (
     <div
       className={`min-h-screen transition-colors duration-300 ${
-        theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"
+        theme === "dark"
+          ? "bg-gray-900 text-gray-100"
+          : "bg-gray-50 text-gray-900"
       }`}
     >
       {/* Search and Filter Section */}
-      <div className={`sticky top-0 z-10 py-4 px-4 ${
-        theme === "dark" ? "bg-gray-900/80" : "bg-gray-50/80"
-      } backdrop-blur-md`}>
+      <div
+        className={`sticky top-0 z-10 py-4 px-4 ${
+          theme === "dark" ? "bg-gray-900/80" : "bg-gray-50/80"
+        } backdrop-blur-md`}
+      >
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search Bar */}
             <div className="relative flex-1">
-              <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}>
+              <div
+                className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
                 <FiSearch />
               </div>
               <input
@@ -155,7 +166,9 @@ const HomePage = () => {
                 <FiFilter />
                 <span>Filters</span>
               </button>
-              {(searchQuery || filters.sortBy !== "createdAt" || filters.sortType !== "desc") && (
+              {(searchQuery ||
+                filters.sortBy !== "createdAt" ||
+                filters.sortType !== "desc") && (
                 <button
                   onClick={resetFilters}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
@@ -175,14 +188,20 @@ const HomePage = () => {
 
           {/* Filter Dropdown */}
           {showFilters && (
-            <div className={`mt-4 p-4 rounded-lg ${
-              theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-            } border`}>
+            <div
+              className={`mt-4 p-4 rounded-lg ${
+                theme === "dark"
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              } border`}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className={`block mb-2 font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}>
+                  <label
+                    className={`block mb-2 font-medium ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
                     Sort By
                   </label>
                   <select
@@ -201,9 +220,11 @@ const HomePage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className={`block mb-2 font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}>
+                  <label
+                    className={`block mb-2 font-medium ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
                     Sort Order
                   </label>
                   <select
@@ -234,13 +255,98 @@ const HomePage = () => {
           </div>
         ) : (
           <>
-            {videos.length === 0 ? (
+            {/* Channels Section */}
+            {channels.length > 0 && (
+              <div className="mb-8">
+                <h2
+                  className={`text-xl font-semibold mb-4 ${
+                    theme === "dark" ? "text-gray-100" : "text-gray-900"
+                  }`}
+                >
+                  Channels
+                </h2>
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                >
+                  {channels.map((channel) => (
+                    <Link key={channel._id} to={`/profile/${channel.username}`}>
+                      <motion.div
+                        variants={item}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`p-4 rounded-lg transition-all duration-300 ${
+                          theme === "dark"
+                            ? "bg-gray-800 hover:bg-gray-750"
+                            : "bg-white hover:bg-gray-50"
+                        } shadow-md`}
+                      >
+                        <div className="flex flex-col items-center text-center">
+                          {channel.avatar ? (
+                            <img
+                              src={channel.avatar}
+                              alt={channel.username}
+                              className="w-20 h-20 rounded-full object-cover mb-3"
+                            />
+                          ) : (
+                            <div
+                              className={`w-20 h-20 rounded-full flex items-center justify-center ${
+                                theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                              }`}
+                            >
+                              <FiUser
+                                size={40}
+                                className={
+                                  theme === "dark"
+                                    ? "text-gray-400"
+                                    : "text-gray-500"
+                                }
+                              />
+                            </div>
+                          )}
+                          <h3 className="font-semibold text-sm">
+                            {channel.fullName}
+                          </h3>
+                          <p
+                            className={`text-xs ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            @{channel.username}
+                          </p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {channel.subscribersCount} subscribers
+                          </p>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  ))}
+                </motion.div>
+              </div>
+            )}
+
+            {/* Videos Section */}
+            {videos.length === 0 && channels.length === 0 ? (
               <div className="text-center py-12">
                 <h3 className="text-xl font-medium">
-                  {searchQuery ? "No videos match your search" : "No videos found"}
+                  {searchQuery
+                    ? "No videos match your search"
+                    : "No videos found"}
                 </h3>
                 <p className="mt-2 opacity-80">
-                  {searchQuery ? "Try different keywords" : "Upload your first video to get started"}
+                  {searchQuery
+                    ? "Try different keywords"
+                    : "Upload your first video to get started"}
                 </p>
               </div>
             ) : (
@@ -257,13 +363,17 @@ const HomePage = () => {
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.98 }}
                       className={`rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${
-                        theme === "dark" ? "bg-gray-800 hover:bg-gray-750" : "bg-white hover:bg-gray-50"
+                        theme === "dark"
+                          ? "bg-gray-800 hover:bg-gray-750"
+                          : "bg-white hover:bg-gray-50"
                       }`}
                     >
                       {/* Video Thumbnail */}
-                      <div className={`relative aspect-video ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                      }`}>
+                      <div
+                        className={`relative aspect-video ${
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                        }`}
+                      >
                         {video.videoFile ? (
                           <video
                             className="w-full h-full object-cover"
@@ -301,7 +411,11 @@ const HomePage = () => {
                               }`}
                             >
                               <FiUser
-                                className={theme === "dark" ? "text-gray-400" : "text-gray-500"}
+                                className={
+                                  theme === "dark"
+                                    ? "text-gray-400"
+                                    : "text-gray-500"
+                                }
                               />
                             </div>
                           )}
@@ -316,7 +430,9 @@ const HomePage = () => {
                               <span>{video.views || 0} views</span>
                               <span>
                                 {video.createdAt
-                                  ? new Date(video.createdAt).toLocaleDateString()
+                                  ? new Date(
+                                      video.createdAt
+                                    ).toLocaleDateString()
                                   : "Unknown date"}
                               </span>
                             </div>

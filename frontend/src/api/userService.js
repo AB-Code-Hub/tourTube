@@ -13,4 +13,13 @@ const updateUserCoverImage = async (formData) => {
   return await client.patch("/users/update-coverimage", formData);
 }
 
-export {updateUserProfile, updateUserAvatar, updateUserCoverImage}
+ const changePassword = (data) => {
+  return client.post('/users/change-password', data);
+};
+
+// Get watch history
+ const fetchWatchHistory = () => {
+  return client.get('/users/history');
+};
+
+export {updateUserProfile, updateUserAvatar, updateUserCoverImage, changePassword, fetchWatchHistory}

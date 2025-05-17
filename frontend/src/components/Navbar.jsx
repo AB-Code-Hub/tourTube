@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { FiMenu, FiX, FiUser, FiUpload, FiLogOut,  FiSun, FiMoon,  } from "react-icons/fi";
+import { 
+  FiMenu, FiX, FiUser, FiUpload, FiLogOut, 
+  FiSun, FiMoon, FiClock, FiHome, FiSearch
+} from "react-icons/fi";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -45,14 +48,73 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            {/* Theme Toggle */}
+          <div className="hidden md:flex items-center space-x-6">
+            {/* Main Navigation Links */}
+            <div className="flex items-center space-x-6">
+
+              {/* {user && (
+                   <div className="relative mx-4 hidden lg:block">
+              <input
+                type="text"
+                placeholder="Search..."
+                className={`w-64 px-4 py-2 rounded-full text-sm ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 focus:border-blue-500' 
+                    : 'bg-gray-100 border-gray-300 focus:border-blue-400'
+                } border focus:outline-none`}
+              />
+              <FiSearch 
+                className={`absolute right-3 top-2.5 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`} 
+                size={16} 
+              />
+            </div>
+              )} */}
+              <Link 
+                to="/" 
+                className={`flex items-center space-x-1 font-medium ${
+                  theme === 'dark' ? 'hover:text-blue-400' : 'hover:text-blue-600'
+                }`}
+              >
+                <FiHome size={18} />
+                <span>Home</span>
+              </Link>
+
+          
+              
+              {user && (
+                <>
+                  <Link 
+                    to="/watch-history" 
+                    className={`flex items-center space-x-1 font-medium ${
+                      theme === 'dark' ? 'hover:text-blue-400' : 'hover:text-blue-600'
+                    }`}
+                  >
+                    <FiClock size={18} />
+                    <span>History</span>
+                  </Link>
+                  <Link 
+                    to="/upload" 
+                    className={`flex items-center space-x-1 font-medium ${
+                      theme === 'dark' ? 'hover:text-blue-400' : 'hover:text-blue-600'
+                    }`}
+                  >
+                    <FiUpload size={18} />
+                    <span>Upload</span>
+                  </Link>
+                </>
+              )}
+            </div>
+
+         
+
             <button
               onClick={toggleTheme}
               className={`p-2 rounded-full ${
                 theme === 'dark' 
-                  ? 'bg-gray-700 text-yellow-300' 
-                  : 'bg-gray-200 text-gray-700'
+                  ? 'bg-gray-700 text-yellow-300 hover:bg-gray-600' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
               aria-label="Toggle theme"
             >
@@ -86,24 +148,24 @@ export default function Navbar() {
                       ? 'bg-gray-800 border border-gray-700' 
                       : 'bg-white border border-gray-200'
                   }`}>
-                   
-                    <Link
-                      to="/upload"
-                      onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center px-4 py-2 text-sm hover:bg-blue-500 hover:text-white"
-                    >
-                      <FiUpload className="mr-2" /> Upload Video
-                    </Link>
                     <Link
                       to={`/profile/${user?.username}`}
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center px-4 py-2 text-sm hover:bg-blue-500 hover:text-white"
+                      className={`flex items-center px-4 py-2 text-sm ${
+                        theme === 'dark' 
+                          ? 'hover:bg-gray-700' 
+                          : 'hover:bg-gray-100'
+                      }`}
                     >
                       <FiUser className="mr-2" /> Your Profile
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center w-full px-4 py-2 text-sm hover:bg-red-500 hover:text-white"
+                      className={`flex items-center w-full px-4 py-2 text-sm ${
+                        theme === 'dark' 
+                          ? 'hover:bg-gray-700 text-red-400' 
+                          : 'hover:bg-gray-100 text-red-600'
+                      }`}
                     >
                       <FiLogOut className="mr-2" /> Sign Out
                     </button>
@@ -145,42 +207,46 @@ export default function Navbar() {
       {isOpen && (
         <div className={`md:hidden ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} pb-4 px-4`}>
           <div className="pt-2 space-y-2">
-            {user ? (
+            <Link
+              to="/"
+              onClick={() => setIsOpen(false)}
+              className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
+                theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+              }`}
+            >
+              <FiHome className="mr-2" /> Home
+            </Link>
+            
+            {user && (
               <>
-               
+                <Link
+                  to="/watch-history"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
+                    theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <FiClock className="mr-2" /> Watch History
+                </Link>
                 <Link
                   to="/upload"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center px-3 py-2 rounded-md text-base font-medium hover:bg-blue-500 hover:text-white"
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
+                    theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                  }`}
                 >
                   <FiUpload className="mr-2" /> Upload Video
                 </Link>
                 <Link
                   to={`/profile/${user?.username}`}
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center px-3 py-2 rounded-md text-base font-medium hover:bg-blue-500 hover:text-white"
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
+                    theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                  }`}
                 >
                   <FiUser className="mr-2" /> Your Profile
                 </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium hover:bg-red-500 hover:text-white"
-                >
-                  <FiLogOut className="mr-2" /> Sign Out
-                </button>
               </>
-            ) : (
-              <Link
-                to="/login"
-                onClick={() => setIsOpen(false)}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  theme === 'dark' 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : 'bg-blue-500 hover:bg-blue-600'
-                } text-white text-center`}
-              >
-                Sign In
-              </Link>
             )}
 
             {/* Theme Toggle for Mobile */}
@@ -202,6 +268,31 @@ export default function Navbar() {
                 </>
               )}
             </button>
+
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className={`flex items-center w-full px-3 py-2 rounded-md text-base font-medium ${
+                  theme === 'dark' 
+                    ? 'hover:bg-gray-700 text-red-400' 
+                    : 'hover:bg-gray-100 text-red-600'
+                }`}
+              >
+                <FiLogOut className="mr-2" /> Sign Out
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setIsOpen(false)}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  theme === 'dark' 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-blue-500 hover:bg-blue-600'
+                } text-white text-center`}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}

@@ -14,9 +14,59 @@ import {
 import { Like } from "../models/like.model.js";
 import { Comment } from "../models/comment.model.js";
 import { VideoView } from "../models/videoView.model.js";
+import { User } from "../models/user.model.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+
+  // Search for channels if query exists
+  let channels = [];
+  if (query) {
+    channels = await User.aggregate([
+      {
+        $match: {
+          $or: [
+            { username: { $regex: query, $options: "i" } },
+            { fullName: { $regex: query, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "subscriptions",
+          localField: "_id",
+          foreignField: "channel",
+          as: "subscribers",
+        },
+      },
+      {
+        $addFields: {
+          subscribersCount: { $size: "$subscribers" },
+          isSubscribed: {
+            $cond: {
+              if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          fullName: 1,
+          avatar: 1,
+          subscribersCount: 1,
+          isSubscribed: 1,
+        },
+      },
+      {
+        $limit: 12, // Limit channel results
+      },
+    ]);
+  }
+
   const pipeline = [
     {
       $match: {
@@ -104,9 +154,9 @@ const getAllVideos = asyncHandler(async (req, res) => {
     ...(userId && { owner: new mongoose.Types.ObjectId(userId) }),
     isPublished: true,
   });
-
   const response = {
     videos,
+    channels: query ? channels : [], // Only include channels if there's a search query
     totalVideos,
     currentPage: parseInt(page),
     totalPages: Math.ceil(totalVideos / parseInt(limit)),
@@ -115,7 +165,13 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, response, "Videos retrieved successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        response,
+        "Videos and channels retrieved successfully"
+      )
+    );
 });
 
 const publishedVideo = asyncHandler(async (req, res) => {
@@ -234,6 +290,13 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   // Get user identifier (either user ID or IP address)
   const userId = req.user?._id || req.ip;
+
+  // Add to watch history if user is authenticated
+  if (req.user?._id) {
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { watchHistory: videoId }, // Using $addToSet to avoid duplicates
+    });
+  }
 
   try {
     // Try to create a new view record
