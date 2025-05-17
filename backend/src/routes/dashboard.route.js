@@ -13,6 +13,6 @@ router.use(verifyJwtToken);
 router.route("/stats").get(getChannelStats);
 
 // Get channel videos
-router.route("/videos").get(getChannelVideos);
+router.route("/videos/:userId").get(getChannelVideos);
 
 export default router;

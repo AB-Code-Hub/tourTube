@@ -29,7 +29,6 @@ export default function AppRoutes() {
             <main className="flex-grow">
               <AnimatePresence mode="wait">
                 <Routes>
-                  {/* Public Routes */}
                   <Route
                     path="/"
                     element={

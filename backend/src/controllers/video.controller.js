@@ -7,9 +7,13 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utils/cloudinary.js";
-import { pubishedVideoValidation, updateVideoValidation } from "../validation/video.validation.js";
+import {
+  pubishedVideoValidation,
+  updateVideoValidation,
+} from "../validation/video.validation.js";
 import { Like } from "../models/like.model.js";
 import { Comment } from "../models/comment.model.js";
+import { VideoView } from "../models/videoView.model.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -226,6 +230,27 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   if (!videoId) {
     throw new ApiError(400, "Video id is required");
+  }
+
+  // Get user identifier (either user ID or IP address)
+  const userId = req.user?._id || req.ip;
+
+  try {
+    // Try to create a new view record
+    await VideoView.create({
+      video: videoId,
+      user: userId.toString(),
+    });
+
+    // Only increment the view if we successfully created a view record
+    await Video.findByIdAndUpdate(videoId, {
+      $inc: { views: 1 },
+    });
+  } catch (error) {
+    // If error is duplicate key error, ignore it (user already viewed within time window)
+    if (error.code !== 11000) {
+      console.error("Error tracking video view:", error);
+    }
   }
 
   const video = await Video.aggregate([

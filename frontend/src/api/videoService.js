@@ -10,7 +10,7 @@ export const fetchAllVideos = async (params = {}) => await client.get("/videos",
     }
   });
 
-export const fetchUserVideos = () => { return client.get(`dashboard/videos`);};
+export const fetchUserVideos = (userId) => { return client.get(`dashboard/videos/${userId}`);};
 export const likeVideo = async (id) => await client.post(`/likes/videos/${id}`);
 export const uploadVideo = async (videoData) => await client.post("/videos/publish", videoData);
 export const updateVideo = async (id, videoData) => await client.patch(`/videos/update/${id}`, videoData);

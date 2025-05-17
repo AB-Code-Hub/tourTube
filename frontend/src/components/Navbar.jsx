@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { FiMenu, FiX, FiUser, FiUpload, FiLogOut, FiVideo, FiSun, FiMoon, FiYoutube } from "react-icons/fi";
+import { FiMenu, FiX, FiUser, FiUpload, FiLogOut,  FiSun, FiMoon,  } from "react-icons/fi";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -156,7 +156,7 @@ export default function Navbar() {
                   <FiUpload className="mr-2" /> Upload Video
                 </Link>
                 <Link
-                  to="/profile"
+                  to={`/profile/${user?.username}`}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-3 py-2 rounded-md text-base font-medium hover:bg-blue-500 hover:text-white"
                 >

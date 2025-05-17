@@ -123,8 +123,13 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     sortType = "desc",
     query,
   } = req.query;
-  const userId = req.user?._id;
-
+  const { userId } = req.params;
+  if (!userId) {
+    return res.status(400).json(new ApiError(400, "User ID is required"));
+  }
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json(new ApiError(400, "Invalid User ID"));
+  }
   const pipeline = [
     {
       $match: {

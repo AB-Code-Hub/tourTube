@@ -42,8 +42,6 @@ const ProfilePage = () => {
         setVideos(videosResponse.data?.data?.videos || []);
         
         if (currentUser && !isOwner) {
-          // Add your subscription check API call here
-
           setIsSubscribed(userResponse.data?.data?.isSubscribed);
         }
       } catch (err) {
@@ -327,7 +325,7 @@ const ProfilePage = () => {
                   theme === "dark" ? "bg-gray-800 hover:bg-gray-750" : "bg-white hover:bg-gray-50"
                 }`}
               >
-                <Link to={`/video/${video._id}`}>
+                <Link to={`/videos/${video._id}`}>
                   <div className={`relative aspect-video ${
                     theme === "dark" ? "bg-gray-700" : "bg-gray-200"
                   }`}>
