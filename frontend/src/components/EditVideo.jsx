@@ -4,9 +4,9 @@ import { FiUpload, FiSave, FiX, FiLoader } from "react-icons/fi";
 import { fetchVideoById, updateVideo } from "../api/videoService";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "./LoadingSpinner";
 
-export default function ManageVideo() {
+export default function EditVideo() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -18,7 +18,7 @@ export default function ManageVideo() {
     title: "",
     description: "",
     thumbnail: null,
-    previewThumbnail: ""
+    previewThumbnail: "",
   });
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function ManageVideo() {
           title: res.data.data.title,
           description: res.data.data.description,
           thumbnail: null,
-          previewThumbnail: res.data.data.thumbnail
+          previewThumbnail: res.data.data.thumbnail,
         });
       } catch (error) {
         console.error("Error fetching video:", error);
@@ -50,16 +50,16 @@ export default function ManageVideo() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleThumbnailChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         thumbnail: file,
-        previewThumbnail: URL.createObjectURL(file)
+        previewThumbnail: URL.createObjectURL(file),
       }));
     }
   };
@@ -86,25 +86,31 @@ export default function ManageVideo() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
-        theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
-      }`}>
+      <div
+        className={`min-h-screen flex items-center justify-center ${
+          theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+        }`}
+      >
         <LoadingSpinner size="xl" />
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen py-8 ${
-      theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-    }`}>
+    <div
+      className={`min-h-screen py-8 ${
+        theme === "dark"
+          ? "bg-gray-900 text-gray-100"
+          : "bg-gray-50 text-gray-900"
+      }`}
+    >
       <div className="container mx-auto px-4 max-w-3xl">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Manage Video</h1>
           <button
-            onClick={() => navigate(`/videos/${id}`)}
+            onClick={() => navigate(-1)}
             className={`p-2 rounded-full ${
-              theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-200'
+              theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-200"
             }`}
           >
             <FiX size={20} />
@@ -115,9 +121,11 @@ export default function ManageVideo() {
           <div className="space-y-6">
             {/* Thumbnail Upload */}
             <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-              }`}>
+              <label
+                className={`block text-sm font-medium mb-2 ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
                 Thumbnail
               </label>
               <div className="flex items-center space-x-4">
@@ -128,11 +136,13 @@ export default function ManageVideo() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <label className={`cursor-pointer px-4 py-2 rounded-lg ${
-                  theme === 'dark'
-                    ? 'bg-gray-700 hover:bg-gray-600'
-                    : 'bg-gray-200 hover:bg-gray-300'
-                }`}>
+                <label
+                  className={`cursor-pointer px-4 py-2 rounded-lg ${
+                    theme === "dark"
+                      ? "bg-gray-700 hover:bg-gray-600"
+                      : "bg-gray-200 hover:bg-gray-300"
+                  }`}
+                >
                   <input
                     type="file"
                     accept="image/*"
@@ -149,9 +159,11 @@ export default function ManageVideo() {
 
             {/* Title Input */}
             <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-              }`}>
+              <label
+                className={`block text-sm font-medium mb-2 ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
                 Title
               </label>
               <input
@@ -160,9 +172,9 @@ export default function ManageVideo() {
                 value={formData.title}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  theme === 'dark'
-                    ? 'bg-gray-800 border-gray-700 focus:border-blue-500'
-                    : 'bg-white border-gray-300 focus:border-blue-400'
+                  theme === "dark"
+                    ? "bg-gray-800 border-gray-700 focus:border-blue-500"
+                    : "bg-white border-gray-300 focus:border-blue-400"
                 }`}
                 required
               />
@@ -170,9 +182,11 @@ export default function ManageVideo() {
 
             {/* Description Input */}
             <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-              }`}>
+              <label
+                className={`block text-sm font-medium mb-2 ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
                 Description
               </label>
               <textarea
@@ -181,9 +195,9 @@ export default function ManageVideo() {
                 onChange={handleChange}
                 rows="4"
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  theme === 'dark'
-                    ? 'bg-gray-800 border-gray-700 focus:border-blue-500'
-                    : 'bg-white border-gray-300 focus:border-blue-400'
+                  theme === "dark"
+                    ? "bg-gray-800 border-gray-700 focus:border-blue-500"
+                    : "bg-white border-gray-300 focus:border-blue-400"
                 }`}
               />
             </div>
@@ -195,8 +209,8 @@ export default function ManageVideo() {
                 disabled={updating}
                 className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
                   updating
-                    ? 'bg-blue-400 cursor-not-allowed'
-                    : 'bg-blue-500 hover:bg-blue-600'
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600"
                 } text-white`}
               >
                 {updating ? (

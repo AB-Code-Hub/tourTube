@@ -5,7 +5,7 @@ import {
   deleteVideo,
   toggleVideoVisibility,
 } from "../api/videoService";
-import { FiEye, FiEyeOff, FiTrash2, FiLoader } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiTrash2, FiLoader, FiEdit } from "react-icons/fi";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
@@ -161,43 +161,50 @@ export default function VideoManagementPage() {
                 </div>
                </Link>
 
-                <div className="flex space-x-2">
-                  {" "}
-                  <button
-                    onClick={() =>
-                      handleToggleVisibility(video._id, video.isPublished)
-                    }
-                    className={`p-2 rounded-full ${
-                      video.isPublished
-                        ? theme === "dark"
-                          ? "bg-green-900/30 text-green-400 hover:bg-green-800/40"
-                          : "bg-green-100 text-green-600 hover:bg-green-200"
-                        : theme === "dark"
-                        ? "bg-gray-700 text-gray-400 hover:bg-gray-600"
-                        : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                    }`}
-                    title={
-                      video.isPublished ? "Unpublish video" : "Publish video"
-                    }
-                  >
-                    {video.isPublished ? (
-                      <FiEye size={18} />
-                    ) : (
-                      <FiEyeOff size={18} />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setVideoToDelete(video)}
-                    className={`p-2 rounded-full ${
-                      theme === "dark"
-                        ? "bg-red-900/30 text-red-400 hover:bg-red-800/50"
-                        : "bg-red-100 text-red-600 hover:bg-red-200"
-                    }`}
-                    title="Delete video"
-                  >
-                    <FiTrash2 size={18} />
-                  </button>
-                </div>
+<div className="flex space-x-2">
+  {/* Toggle visibility button */}
+  <button
+    onClick={() => handleToggleVisibility(video._id, video.isPublished)}
+    className={`p-2 rounded-full ${
+      video.isPublished
+        ? theme === "dark"
+          ? "bg-green-900/30 text-green-400 hover:bg-green-800/40"
+          : "bg-green-100 text-green-600 hover:bg-green-200"
+        : theme === "dark"
+        ? "bg-gray-700 text-gray-400 hover:bg-gray-600"
+        : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+    }`}
+    title={video.isPublished ? "Unpublish video" : "Publish video"}
+  >
+    {video.isPublished ? <FiEye size={18} /> : <FiEyeOff size={18} />}
+  </button>
+
+  {/* Delete button */}
+  <button
+    onClick={() => setVideoToDelete(video)}
+    className={`p-2 rounded-full ${
+      theme === "dark"
+        ? "bg-red-900/30 text-red-400 hover:bg-red-800/50"
+        : "bg-red-100 text-red-600 hover:bg-red-200"
+    }`}
+    title="Delete video"
+  >
+    <FiTrash2 size={18} />
+  </button>
+
+  {/* Edit button - LINK */}
+  <Link
+    to={`/edit-video/${video._id}`}
+    className={`p-2 rounded-full ${
+      theme === "dark"
+        ? "bg-blue-900/30 text-blue-400 hover:bg-blue-800/50"
+        : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+    }`}
+    title="Edit video"
+  >
+    <FiEdit size={18} />
+  </Link>
+</div>
               </div>
             ))}
           </div>

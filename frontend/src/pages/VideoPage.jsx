@@ -499,7 +499,7 @@ setComments(commentsRes?.data?.data?.comments?.map(comment => ({
           >
             <div className="py-1">
               <Link
-                to={`/manage-video/${video._id}`}
+                to={`/edit-video/${video._id}`}
                 className={`items-center flex  px-4 py-2 text-sm ${
                   theme === "dark" 
                     ? "text-gray-200 hover:bg-gray-700" 

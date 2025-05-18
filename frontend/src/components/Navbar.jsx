@@ -4,7 +4,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { 
   FiMenu, FiX, FiUser, FiUpload, FiLogOut, 
-  FiSun, FiMoon, FiClock, FiHome, FiSearch
+  FiSun, FiMoon, FiClock, FiHome, FiSearch,
+  FiTwitter
 } from "react-icons/fi";
 
 export default function Navbar() {
@@ -103,6 +104,17 @@ export default function Navbar() {
                     <FiUpload size={18} />
                     <span>Upload</span>
                   </Link>
+
+                     <Link 
+                    to="/manage-tweets" 
+                    className={`flex items-center space-x-1 font-medium ${
+                      theme === 'dark' ? 'hover:text-gray-400' : 'hover:text-gray-600'
+                    }`}
+                  >
+                    <FiTwitter size={18} />
+                    <span>Tweets</span>
+                  </Link>
+
                 </>
               )}
             </div>
@@ -237,6 +249,18 @@ export default function Navbar() {
                 >
                   <FiUpload className="mr-2" /> Upload Video
                 </Link>
+
+                  <Link
+                  to="/manage-tweets"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
+                    theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <FiTwitter className="mr-2" /> Tweets
+                </Link>
+                  
+
                 <Link
                   to={`/profile/${user?.username}`}
                   onClick={() => setIsOpen(false)}

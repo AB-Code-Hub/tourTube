@@ -15,10 +15,11 @@ import "react-toastify/dist/ReactToastify.css";
 import { AnimatePresence } from "framer-motion";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EditProfilePage from "../pages/EditProfilePage";
-import ManageVideo from "../components/ManageVideo";
 import ChangePassword from "../components/ChangePassword";
 import WatchHistory from "../pages/WatchHistory";
 import VideoManagementPage from "../pages/VideoManagementPage";
+import EditVideo from "../components/EditVideo";
+import TweetPage from "../pages/TweetPage";
 const VideoPage = lazy(() => import("../pages/VideoPage"));
 const HomePage = lazy(() => import("../pages/HomePage"));
 
@@ -63,7 +64,7 @@ export default function AppRoutes() {
                       element={<ProfilePage />}
                     />
                     <Route path="/profile/edit" element={<EditProfilePage />} />
-                    <Route path="/manage-video/:id" element={<ManageVideo />} />
+                    <Route path="/edit-video/:id" element={<EditVideo />} />
                     <Route
                       path="/videos-manage"
                       element={<VideoManagementPage />}
@@ -73,6 +74,9 @@ export default function AppRoutes() {
                       element={<ChangePassword />}
                     />
                     <Route path="/watch-history" element={<WatchHistory />} />
+
+                      <Route path="/manage-tweets" element={<TweetPage />} />
+
                   </Route>
 
                   {/* Error Handling */}
