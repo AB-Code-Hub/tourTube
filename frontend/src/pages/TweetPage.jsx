@@ -14,7 +14,7 @@ import {
 } from 'react-icons/fi';
 import { 
   createTweet, 
-  getTweets, 
+  getUserTweets, 
   updateTweet, 
   deleteTweet,
 } from '../api/tweetService.js';
@@ -39,7 +39,7 @@ const TweetPage = () => {
     const fetchTweets = async () => {
       try {
         setLoading(true);
-        const response = await getTweets(user?._id);
+        const response = await getUserTweets(user?._id);
         setTweets(response.data?.data?.tweets || []);
       } catch (error) {
         console.error('Error fetching tweets:', error);

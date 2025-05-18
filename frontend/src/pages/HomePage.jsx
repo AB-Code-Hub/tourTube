@@ -2,15 +2,18 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { fetchAllVideos } from "../api/videoService";
 import { useTheme } from "../contexts/ThemeContext";
-import { FiUser, FiSearch, FiFilter, FiX } from "react-icons/fi";
+import { FiUser, FiSearch, FiFilter, FiX, FiMessageSquare, FiHeart } from "react-icons/fi";
+import { getTweets } from "../api/tweetService";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 const HomePage = () => {
   const [videos, setVideos] = useState([]);
   const [channels, setChannels] = useState([]);
+  const [tweets, setTweets] = useState([]); 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tweetsLoading, setTweetsLoading] = useState(true);
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
@@ -39,6 +42,18 @@ const HomePage = () => {
     }
   };
 
+   const fetchTweets = async () => {
+    try {
+      setTweetsLoading(true);
+      const response = await getTweets();
+      setTweets(response.data?.data?.tweets || []);
+    } catch (err) {
+      console.error("Failed to fetch tweets:", err);
+    } finally {
+      setTweetsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchVideos();
@@ -46,6 +61,10 @@ const HomePage = () => {
 
     return () => clearTimeout(timer);
   }, [searchQuery, filters]);
+
+   useEffect(() => {
+    fetchTweets(); 
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -255,6 +274,136 @@ const HomePage = () => {
           </div>
         ) : (
           <>
+
+              {/* Tweet Section */}
+
+                <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-xl font-semibold flex items-center ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-900"
+                }`}>
+                  <FiMessageSquare className="mr-2" />
+                  Recent Tweets
+                </h2>
+                <Link
+                  to="/manage-tweets"
+                  className={`px-3 py-1 text-sm rounded-full ${
+                    theme === "dark"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-blue-500 hover:bg-blue-600"
+                  } text-white`}
+                >
+                  Create Tweet
+                </Link>
+              </div>
+
+              {tweetsLoading ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner size="sm" />
+                </div>
+              ) : tweets.length === 0 ? (
+                <div className={`text-center py-8 rounded-lg ${
+                  theme === "dark"
+                    ? "bg-gray-800 text-gray-400"
+                    : "bg-gray-100 text-gray-500"
+                }`}>
+                  <FiMessageSquare size={32} className="mx-auto mb-3" />
+                  <h3 className="text-lg font-medium">No tweets yet</h3>
+                  <p>Be the first to tweet!</p>
+                </div>
+              ) : (
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  {tweets.slice(0, 4).map((tweet) => (
+                    <motion.div
+                      key={tweet._id}
+                      variants={item}
+                      className={`p-4 rounded-lg ${
+                        theme === "dark"
+                          ? "bg-gray-800"
+                          : "bg-white border border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        {tweet.owner?.avatar ? (
+                          <img
+                            src={tweet.owner.avatar}
+                            alt={tweet.owner.fullName}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                          }`}>
+                            <FiUser className={
+                              theme === "dark" ? "text-gray-400" : "text-gray-500"
+                            } />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium">
+                                {tweet.owner?.fullName || "User"}
+                              </span>
+                              <span className={`text-xs ${
+                                theme === "dark" ? "text-gray-400" : "text-gray-500"
+                              }`}>
+                                @{tweet.owner?.username}
+                              </span>
+                            </div>
+                            <span className={`text-xs ${
+                              theme === "dark" ? "text-gray-500" : "text-gray-400"
+                            }`}>
+                              {new Date(tweet.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="mt-1 whitespace-pre-line">
+                            {tweet.content}
+                          </p>
+                          <div className="flex items-center mt-3 space-x-4">
+                            <button
+                              className={`flex items-center space-x-1 ${
+                                tweet.isLiked
+                                  ? "text-red-500"
+                                  : theme === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              <FiHeart
+                                className={tweet.isLiked ? "fill-current" : ""}
+                                size={16}
+                              />
+                              <span className="text-sm">
+                                {tweet.likesCount || 0}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+              {tweets.length > 4 && (
+                <div className="mt-4 text-center">
+                  <Link
+                    to="/tweets"
+                    className={`text-sm ${
+                      theme === "dark" ? "text-blue-400" : "text-blue-500"
+                    } hover:underline`}
+                  >
+                    View all tweets
+                  </Link>
+                </div>
+              )}
+            </div>
+
             {/* Channels Section */}
             {channels.length > 0 && (
               <div className="mb-8">

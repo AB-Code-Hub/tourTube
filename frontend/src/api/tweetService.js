@@ -5,7 +5,7 @@ export const createTweet = async (content) => {
   return response;
 };
 
-export const getTweets = async (userId) => {
+export const getUserTweets = async (userId) => {
   const response = await client.get(`/tweets/user/${userId}`);
   return response;
 };
@@ -19,4 +19,9 @@ export const deleteTweet = async (tweetId) => {
   const response = await client.delete(`/tweets/${tweetId}`);
   return response.data;
 };
+
+export const getTweets = async () => {
+  const response = await client.get('/tweets');
+  return response;
+}
 

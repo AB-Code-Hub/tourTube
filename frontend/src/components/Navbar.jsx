@@ -106,7 +106,7 @@ export default function Navbar() {
                   </Link>
 
                      <Link 
-                    to="/manage-tweets" 
+                    to="/tweets" 
                     className={`flex items-center space-x-1 font-medium ${
                       theme === 'dark' ? 'hover:text-gray-400' : 'hover:text-gray-600'
                     }`}
@@ -251,7 +251,7 @@ export default function Navbar() {
                 </Link>
 
                   <Link
-                  to="/manage-tweets"
+                  to="/tweets"
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
                     theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
