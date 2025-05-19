@@ -6,7 +6,10 @@ import {
   FiUser, 
   FiHeart, 
   FiMessageSquare,
-  FiArrowLeft
+  FiArrowLeft,
+  FiRepeat,
+  FiShare2,
+  FiMessageCircle
 } from 'react-icons/fi';
 import { getTweets } from '../api/tweetService';
 import { Link } from 'react-router-dom';
@@ -14,6 +17,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { toast } from 'react-toastify';
 
 const ViewAllTweetsPage = () => {
+  const { user } = useAuth();
   const { theme } = useTheme();
   const [tweets, setTweets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,10 +41,22 @@ const ViewAllTweetsPage = () => {
     fetchTweets();
   }, []);
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now - date) / (1000 * 60 * 60);
+    
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  };
+
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
-        theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+        theme === 'dark' ? 'bg-black' : 'bg-white'
       }`}>
         <LoadingSpinner size="xl" />
       </div>
@@ -50,16 +66,16 @@ const ViewAllTweetsPage = () => {
   if (error) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
-        theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
+        theme === 'dark' ? 'bg-black text-gray-100' : 'bg-white text-gray-900'
       }`}>
         <div className="text-center p-6 max-w-md">
           <h2 className="text-xl font-bold mb-2">Error Loading Tweets</h2>
           <p className="mb-4">{error}</p>
           <Link
             to="/"
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded-full font-bold ${
               theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
-            } text-white inline-block`}
+            } text-white`}
           >
             Go Home
           </Link>
@@ -70,25 +86,22 @@ const ViewAllTweetsPage = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
-      theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+      theme === 'dark' ? 'bg-black text-gray-100' : 'bg-white text-gray-900'
     }`}>
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className={`container mx-auto px-0 max-w-2xl border-x ${
+        theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+      }`}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className={`sticky top-0 z-10 p-4 border-b ${
+          theme === 'dark' ? 'border-gray-800 bg-black/80' : 'border-gray-200 bg-white/80'
+        } backdrop-blur-sm flex items-center`}>
           <Link
             to="/"
-            className={`flex items-center px-3 py-1 rounded-full ${
-              theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-200'
-            }`}
+            className="p-2 rounded-full hover:bg-gray-200/10 mr-6"
           >
-            <FiArrowLeft className="mr-1" />
-            <span>Back</span>
+            <FiArrowLeft className="text-lg" />
           </Link>
-          <h1 className="text-2xl font-bold flex items-center">
-            <FiMessageSquare className="mr-2" />
-            All Tweets
-          </h1>
-          <div className="w-10"></div> {/* Spacer for alignment */}
+          <h1 className="text-xl font-bold">All Tweets</h1>
         </div>
 
         {/* Tweets List */}
@@ -97,10 +110,8 @@ const ViewAllTweetsPage = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className={`text-center py-12 rounded-lg ${
-                theme === 'dark'
-                  ? 'bg-gray-800 text-gray-400'
-                  : 'bg-gray-100 text-gray-500'
+              className={`text-center py-12 ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
               }`}
             >
               <FiMessageSquare size={48} className="mx-auto mb-4" />
@@ -108,94 +119,92 @@ const ViewAllTweetsPage = () => {
               <p>Be the first to tweet!</p>
             </motion.div>
           ) : (
-            <motion.div
-              initial="hidden"
-              animate="show"
-              variants={{
-                hidden: { opacity: 0 },
-                show: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0.1,
-                  },
-                },
-              }}
-              className="space-y-4"
-            >
+            <div>
               {tweets.map((tweet) => (
                 <motion.div
                   key={tweet._id}
-                  variants={{
-                    hidden: { y: 20, opacity: 0 },
-                    show: { y: 0, opacity: 1 },
-                  }}
-                  className={`p-4 rounded-lg ${
-                    theme === 'dark'
-                      ? 'bg-gray-800'
-                      : 'bg-white border border-gray-200'
-                  }`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className={`p-4 border-b ${
+                    theme === 'dark' ? 'border-gray-800 hover:bg-gray-900/50' : 'border-gray-200 hover:bg-gray-50'
+                  } transition-colors duration-200`}
                 >
-                  <div className="flex items-start space-x-3">
-                    {tweet.owner?.avatar ? (
-                      <img
-                        src={tweet.owner.avatar}
-                        alt={tweet.owner.fullName}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-                      }`}>
-                        <FiUser className={
-                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                        } />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <Link to={`/profile/${tweet?.owner?.username}`} className="flex items-center space-x-2">
-                          <span className="font-medium">
-                            {tweet.owner?.fullName || "User"}
-                          </span>
-                          <span className={`text-xs ${
-                            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  <div className="flex space-x-3">
+                    <div className="flex-shrink-0">
+                      <Link to={`/profile/${tweet?.owner?.username}`}>
+                        {tweet.owner?.avatar ? (
+                          <img
+                            src={tweet.owner.avatar}
+                            alt={tweet.owner.fullName}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'
                           }`}>
-                            @{tweet.owner?.username}
-                          </span>
+                            <FiUser className={
+                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                            } size={20} />
+                          </div>
+                        )}
+                      </Link>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-1">
+                        <Link to={`/profile/${tweet?.owner?.username}`} className="font-bold hover:underline">
+                          {tweet.owner?.fullName || 'User'}
                         </Link>
-                        <span className={`text-xs ${
+                        <span className={`text-sm ${
                           theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                         }`}>
-                          {new Date(tweet.createdAt).toLocaleDateString()}
+                          @{tweet.owner?.username}
+                        </span>
+                        <span className="text-gray-500">·</span>
+                        <span className={`text-sm ${
+                          theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                        }`}>
+                          {formatDate(tweet.createdAt)}
                         </span>
                       </div>
-                      <p className="mt-1 whitespace-pre-line">
+
+                      <p className="mt-1 text-lg whitespace-pre-line">
                         {tweet.content}
                       </p>
-                      <div className="flex items-center mt-3 space-x-4">
+                      <div className="flex justify-between mt-3 max-w-md">
+                       
                         <button
-                          className={`flex items-center space-x-1 ${
-                            tweet.isLiked
-                              ? 'text-red-500'
-                              : theme === 'dark'
-                              ? 'text-gray-400'
-                              : 'text-gray-500'
+                          className={`flex items-center space-x-1 p-2 rounded-full ${
+                            theme === 'dark' ? 'hover:bg-red-900/20' : 'hover:bg-red-100'
                           }`}
                         >
                           <FiHeart
-                            className={tweet.isLiked ? 'fill-current' : ''}
-                            size={16}
+                            className={
+                              tweet.isLiked 
+                                ? 'fill-current text-red-500' 
+                                : theme === 'dark' 
+                                  ? 'text-gray-500' 
+                                  : 'text-gray-400'
+                            }
+                            size={18}
                           />
-                          <span className="text-sm">
+                          <span className={`text-sm ${
+                            tweet.isLiked 
+                              ? 'text-red-500' 
+                              : theme === 'dark' 
+                                ? 'text-gray-500' 
+                                : 'text-gray-400'
+                          }`}>
                             {tweet.likesCount || 0}
                           </span>
                         </button>
+                      
                       </div>
                     </div>
                   </div>
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
           )}
         </AnimatePresence>
       </div>

@@ -21,6 +21,7 @@ import VideoManagementPage from "../pages/VideoManagementPage";
 import EditVideo from "../components/EditVideo";
 import TweetPage from "../pages/TweetPage";
 import ViewAllTweetsPage from "../pages/ViewAllTweetsPage";
+import PlaylistPage from "../pages/PlaylistPage";
 const VideoPage = lazy(() => import("../pages/VideoPage"));
 const HomePage = lazy(() => import("../pages/HomePage"));
 
@@ -76,10 +77,15 @@ export default function AppRoutes() {
                     />
                     <Route path="/watch-history" element={<WatchHistory />} />
 
-                      <Route path="/manage-tweets" element={<TweetPage />} />
+                    <Route path="/manage-tweets" element={<TweetPage />} />
 
-                      <Route path="/tweets" element={<ViewAllTweetsPage />} />
+                    <Route path="/tweets" element={<ViewAllTweetsPage />} />
 
+                    <Route path="/playlists" element={<PlaylistPage />} />
+                    <Route
+                      path="/playlists/:playlistId"
+                      element={<PlaylistPage />}
+                    />
                   </Route>
 
                   {/* Error Handling */}

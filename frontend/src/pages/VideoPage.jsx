@@ -8,7 +8,11 @@ import {
   deleteComment,
   updateComment,
 } from "../api/commentService";
-import { likeComment, likeVideo } from "../api/likeService";
+import { likeComment, likeVideo } from "../api/likeService.js";
+import {
+  getUserPlaylists,
+  addVideoToPlaylist,
+} from "../api/playlistService.js";
 import {
   subscribeToChannel,
   checkSubscription,
@@ -30,8 +34,17 @@ import {
   FiEdit2,
   FiEdit,
   FiVideo,
+  FiPlus,
+  FiList,
+  FiX,
 } from "react-icons/fi";
-import { FaTwitter, FaWhatsapp, FaInstagram, FaShareAlt, FaClipboard } from 'react-icons/fa';
+import {
+  FaTwitter,
+  FaWhatsapp,
+  FaInstagram,
+  FaShareAlt,
+  FaClipboard,
+} from "react-icons/fa";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { toast } from "react-toastify";
 import VideoRecommendations from "../components/VideoRecommendations";
@@ -55,7 +68,10 @@ export default function VideoPage() {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedComment, setEditedComment] = useState("");
   const [showShareOptions, setShowShareOptions] = useState(false);
-const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [playlists, setPlaylists] = useState([]);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [playlistsLoading, setPlaylistsLoading] = useState(false);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -66,7 +82,7 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
 
         if (videoRes?.data?.data) {
           setVideo(videoRes.data.data);
-          setIsLiked(videoRes?.data?.data?.isLiked)
+          setIsLiked(videoRes?.data?.data?.isLiked);
           if (user && videoRes.data.data.owner?._id) {
             const subRes = await checkSubscription(
               videoRes.data.data.owner._id
@@ -76,13 +92,15 @@ const [showMoreOptions, setShowMoreOptions] = useState(false);
           }
 
           // Fetch comments after video data is loaded
-         // In your useEffect where you fetch comments
-const commentsRes = await fetchComments(id);
-setComments(commentsRes?.data?.data?.comments?.map(comment => ({
-  ...comment,
-  isLiked: comment.isLiked || false,
-  likeCount: comment.likesCount || 0
-})) || []);
+          // In your useEffect where you fetch comments
+          const commentsRes = await fetchComments(id);
+          setComments(
+            commentsRes?.data?.data?.comments?.map((comment) => ({
+              ...comment,
+              isLiked: comment.isLiked || false,
+              likeCount: comment.likesCount || 0,
+            })) || []
+          );
         }
       } catch (error) {
         console.error("Error fetching video:", error);
@@ -97,7 +115,29 @@ setComments(commentsRes?.data?.data?.comments?.map(comment => ({
     }
   }, [id, user]);
 
-  
+  const fetchUserPlaylists = async () => {
+  try {
+    setPlaylistsLoading(true);
+    const response = await getUserPlaylists(user?._id);
+    setPlaylists(response.data?.playlists || []);
+  } catch (error) {
+    console.error("Error fetching playlists:", error);
+    toast.error(error?.response?.data?.message || "Error loading playlists");
+  } finally {
+    setPlaylistsLoading(false);
+  }
+};
+
+const handleAddToPlaylist = async (playlistId) => {
+  try {
+    const response = await addVideoToPlaylist(playlistId, id); 
+    toast.success("Video added to playlist successfully");
+    setShowPlaylistModal(false);
+  } catch (error) {
+    console.error("Error adding to playlist:", error);
+    toast.error(error?.response?.data?.message || "Error adding to playlist");
+  }
+};
 
   const handleLike = async () => {
     try {
@@ -113,29 +153,28 @@ setComments(commentsRes?.data?.data?.comments?.map(comment => ({
     }
   };
 
- const handleCommentLike = async (commentId) => {
-  try {
-    const res = await likeComment(commentId);
- if(res)
- {
-     setComments((prev) =>
-      prev.map((comment) => {
-        if (comment._id === commentId) {
-          return {
-            ...comment,
-            likeCount: res.data.data.likeCount,
-            isLiked: res.data.data.isLiked,
-          };
-        }
-        return comment;
-      })
-    );
- }
-  } catch (error) {
-    console.error("Error liking comment:", error);
-    toast.error(error?.response?.data?.message || "Failed to like comment");
-  }
-};
+  const handleCommentLike = async (commentId) => {
+    try {
+      const res = await likeComment(commentId);
+      if (res) {
+        setComments((prev) =>
+          prev.map((comment) => {
+            if (comment._id === commentId) {
+              return {
+                ...comment,
+                likeCount: res.data.data.likeCount,
+                isLiked: res.data.data.isLiked,
+              };
+            }
+            return comment;
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Error liking comment:", error);
+      toast.error(error?.response?.data?.message || "Failed to like comment");
+    }
+  };
   const handleSubscribe = async () => {
     if (!user) {
       toast.error("Please login to subscribe");
@@ -211,7 +250,6 @@ setComments(commentsRes?.data?.data?.comments?.map(comment => ({
       setCommentLoading(false);
     }
   };
-
 
   if (loading) {
     return (
@@ -295,243 +333,281 @@ setComments(commentsRes?.data?.data?.comments?.map(comment => ({
             </h1>
 
             {/* Video Stats */}
-          <div className={`flex flex-wrap items-center justify-between mb-4 ${
-  theme === "dark" ? "text-gray-400" : "text-gray-600"
-}`}>
-  <div className="flex items-center space-x-4">
-    <span className="flex items-center">
-      <FiEye className="mr-1" /> {video.views || 0} views
-    </span>
-    <span className="flex items-center">
-      <FiClock className="mr-1" /> {video.duration || "0:00"}
-    </span>
-    <span className="flex items-center">
-      <FiCalendar className="mr-1" /> 
-      {new Date(video.createdAt).toLocaleDateString()}
-    </span>
-  </div>
-
-  <div className="flex items-center space-x-3 mt-2 sm:mt-0">
-    {/* Like Button (existing) */}
-    <motion.button
-      whileTap={{ scale: 0.95 }}
-      onClick={handleLike}
-      disabled={likeLoading}
-      className={`flex items-center space-x-1 px-3 py-1 rounded-full ${
-        isLiked
-          ? "bg-red-500 text-white"
-          : theme === "dark"
-          ? "bg-gray-700 hover:bg-gray-600"
-          : "bg-gray-200 hover:bg-gray-300"
-      } transition-colors`}
-    >
-      {likeLoading ? (
-        <FiLoader className="animate-spin" size={16} />
-      ) : (
-        <>
-          <FiHeart className={isLiked ? "fill-current" : ""} />
-          <span>{video.likesCount || 0}</span>
-        </>
-      )}
-    </motion.button>
-
-    {/* Share Button */}
-    <div className="relative">
-      <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setShowShareOptions(!showShareOptions)}
-        className={`p-2 rounded-full ${
-          theme === "dark"
-            ? "bg-gray-700 hover:bg-gray-600"
-            : "bg-gray-200 hover:bg-gray-300"
-        }`}
-      >
-        <FiShare2 size={18} />
-      </motion.button>
-      
-      {/* Share Options Dropdown */}
-      {showShareOptions && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 ${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          }`}
-        >
-          <div className="py-1">
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                setShowShareOptions(false);
-                toast.success("Link copied successfully")
-              }}
-              className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
-                theme === "dark" 
-                  ? "text-gray-200 hover:bg-gray-700" 
-                  : "text-gray-700 hover:bg-gray-100"
+            <div
+              className={`flex flex-wrap items-center justify-between mb-4 ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              <FaClipboard className="text-gray-200" />
-              Copy Link
-            </button>
-<>
-  {/* X */}
-  <button
-    onClick={() => {
-      window.open(
-        `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,
-        '_blank'
-      );
-      setShowShareOptions(false);
-    }}
-    className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
-      theme === "dark"
-        ? "text-gray-200 hover:bg-gray-700"
-        : "text-gray-700 hover:bg-gray-100"
-    }`}
-  >
-    <FaTwitter className="text-blue-500" />
-    Share on X
-  </button>
+              <div className="flex items-center space-x-4">
+                <span className="flex items-center">
+                  <FiEye className="mr-1" /> {video.views || 0} views
+                </span>
+                <span className="flex items-center">
+                  <FiClock className="mr-1" /> {video.duration || "0:00"}
+                </span>
+                <span className="flex items-center">
+                  <FiCalendar className="mr-1" />
+                  {new Date(video.createdAt).toLocaleDateString()}
+                </span>
+              </div>
 
-  {/* WhatsApp */}
-  <button
-    onClick={() => {
-      const url = encodeURIComponent(window.location.href);
-      window.open(`https://wa.me/?text=${url}`, '_blank');
-      setShowShareOptions(false);
-    }}
-    className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
-      theme === "dark"
-        ? "text-gray-200 hover:bg-gray-700"
-        : "text-gray-700 hover:bg-gray-100"
-    }`}
-  >
-    <FaWhatsapp className="text-green-500" />
-    Share on WhatsApp
-  </button>
+              <div className="flex items-center space-x-3 mt-2 sm:mt-0">
+                {/* Like Button (existing) */}
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleLike}
+                  disabled={likeLoading}
+                  className={`flex items-center space-x-1 px-3 py-1 rounded-full ${
+                    isLiked
+                      ? "bg-red-500 text-white"
+                      : theme === "dark"
+                      ? "bg-gray-700 hover:bg-gray-600"
+                      : "bg-gray-200 hover:bg-gray-300"
+                  } transition-colors`}
+                >
+                  {likeLoading ? (
+                    <FiLoader className="animate-spin" size={16} />
+                  ) : (
+                    <>
+                      <FiHeart className={isLiked ? "fill-current" : ""} />
+                      <span>{video.likesCount || 0}</span>
+                    </>
+                  )}
+                </motion.button>
 
-  {/* Instagram (fallback) */}
+                {/* Share Button */}
+                <div className="relative">
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowShareOptions(!showShareOptions)}
+                    className={`p-2 rounded-full ${
+                      theme === "dark"
+                        ? "bg-gray-700 hover:bg-gray-600"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  >
+                    <FiShare2 size={18} />
+                  </motion.button>
+
+                  {/* Share Options Dropdown */}
+                  {showShareOptions && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 ${
+                        theme === "dark" ? "bg-gray-800" : "bg-white"
+                      }`}
+                    >
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(window.location.href);
+                            setShowShareOptions(false);
+                            toast.success("Link copied successfully");
+                          }}
+                          className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+                            theme === "dark"
+                              ? "text-gray-200 hover:bg-gray-700"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <FaClipboard className="text-gray-200" />
+                          Copy Link
+                        </button>
+                        <>
+                          {/* X */}
+                          <button
+                            onClick={() => {
+                              window.open(
+                                `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                                  window.location.href
+                                )}`,
+                                "_blank"
+                              );
+                              setShowShareOptions(false);
+                            }}
+                            className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+                              theme === "dark"
+                                ? "text-gray-200 hover:bg-gray-700"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            <FaTwitter className="text-blue-500" />
+                            Share on X
+                          </button>
+
+                          {/* WhatsApp */}
+                          <button
+                            onClick={() => {
+                              const url = encodeURIComponent(
+                                window.location.href
+                              );
+                              window.open(
+                                `https://wa.me/?text=${url}`,
+                                "_blank"
+                              );
+                              setShowShareOptions(false);
+                            }}
+                            className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+                              theme === "dark"
+                                ? "text-gray-200 hover:bg-gray-700"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            <FaWhatsapp className="text-green-500" />
+                            Share on WhatsApp
+                          </button>
+
+                          {/* Instagram (fallback) */}
+                          <button
+                            onClick={() => {
+                              if (navigator.share) {
+                                navigator
+                                  .share({
+                                    title: document.title,
+                                    url: window.location.href,
+                                  })
+                                  .catch((err) =>
+                                    console.error("Share failed:", err)
+                                  );
+                              } else {
+                                navigator.clipboard.writeText(
+                                  window.location.href
+                                );
+                                alert(
+                                  "Link copied! Open Instagram and paste it in your story or bio."
+                                );
+                              }
+                              setShowShareOptions(false);
+                            }}
+                            className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+                              theme === "dark"
+                                ? "text-gray-200 hover:bg-gray-700"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            <FaInstagram className="text-pink-500" />
+                            Share on Instagram
+                          </button>
+
+                          {/* Generic Share via... */}
+                          <button
+                            onClick={() => {
+                              if (navigator.share) {
+                                navigator
+                                  .share({
+                                    title: document.title,
+                                    text: "Check this out!",
+                                    url: window.location.href,
+                                  })
+                                  .catch((err) =>
+                                    console.error("Web Share API failed:", err)
+                                  );
+                              } else {
+                                alert(
+                                  "Sharing is not supported on this device."
+                                );
+                              }
+                              setShowShareOptions(false);
+                            }}
+                            className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+                              theme === "dark"
+                                ? "text-gray-200 hover:bg-gray-700"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            <FaShareAlt className="text-gray-500" />
+                            Share via…
+                          </button>
+                            
+
+                        </>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
+{user && (
   <button
     onClick={() => {
-      if (navigator.share) {
-        navigator
-          .share({
-            title: document.title,
-            url: window.location.href,
-          })
-          .catch((err) => console.error("Share failed:", err));
-      } else {
-        navigator.clipboard.writeText(window.location.href);
-        alert("Link copied! Open Instagram and paste it in your story or bio.");
+      if (!user) {
+        toast.error("Please login to add to playlists");
+        return;
       }
-      setShowShareOptions(false);
+      fetchUserPlaylists();
+      setShowPlaylistModal(true);
     }}
-    className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
-      theme === "dark"
-        ? "text-gray-200 hover:bg-gray-700"
-        : "text-gray-700 hover:bg-gray-100"
+    className={`flex items-center space-x-1 p-2 rounded-full ${
+      theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-200"
     }`}
   >
-    <FaInstagram className="text-pink-500" />
-    Share on Instagram
+    <FiPlus size={18} />
+    <span className="text-sm">Add to Playlist</span>
   </button>
+)}
 
-  {/* Generic Share via... */}
-  <button
-    onClick={() => {
-      if (navigator.share) {
-        navigator
-          .share({
-            title: document.title,
-            text: "Check this out!",
-            url: window.location.href,
-          })
-          .catch((err) => console.error("Web Share API failed:", err));
-      } else {
-        alert("Sharing is not supported on this device.");
-      }
-      setShowShareOptions(false);
-    }}
-    className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
-      theme === "dark"
-        ? "text-gray-200 hover:bg-gray-700"
-        : "text-gray-700 hover:bg-gray-100"
-    }`}
-  >
-    <FaShareAlt className="text-gray-500" />
-    Share via…
-  </button>
-</>
+                {/* More Options Button */}
+                {user?._id === video.owner?._id && (
+                  <div className="relative">
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowMoreOptions(!showMoreOptions)}
+                      className={`p-2 rounded-full ${
+                        theme === "dark"
+                          ? "bg-gray-700 hover:bg-gray-600"
+                          : "bg-gray-200 hover:bg-gray-300"
+                      }`}
+                    >
+                      <FiMoreHorizontal size={18} />
+                    </motion.button>
+
+                    {/* More Options Dropdown */}
+                    {showMoreOptions && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 ${
+                          theme === "dark" ? "bg-gray-800" : "bg-white"
+                        }`}
+                      >
+                        <div className="py-1">
+                          <Link
+                            to={`/edit-video/${video._id}`}
+                            className={`items-center flex  px-4 py-2 text-sm ${
+                              theme === "dark"
+                                ? "text-gray-200 hover:bg-gray-700"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                            onClick={() => setShowMoreOptions(false)}
+                          >
+                            <FiEdit className="mr-2" />
+                            Edit Video
+                          </Link>
+
+                          <Link
+                            to={`/videos-manage`}
+                            className={`items-center flex px-4 py-2 text-sm ${
+                              theme === "dark"
+                                ? "text-gray-200 hover:bg-gray-700"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                            onClick={() => setShowMoreOptions(false)}
+                          >
+                            <FiVideo className="mr-2" />
+                            Manage Video
+                          </Link>
 
 
 
-          </div>
-        </motion.div>
-      )}
-    </div>
-
-    {/* More Options Button */}
-    {user?._id === video.owner?._id && (
-      <div className="relative">
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowMoreOptions(!showMoreOptions)}
-          className={`p-2 rounded-full ${
-            theme === "dark"
-              ? "bg-gray-700 hover:bg-gray-600"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-        >
-          <FiMoreHorizontal size={18} />
-        </motion.button>
-        
-        {/* More Options Dropdown */}
-        {showMoreOptions && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
-          >
-            <div className="py-1">
-              <Link
-                to={`/edit-video/${video._id}`}
-                className={`items-center flex  px-4 py-2 text-sm ${
-                  theme === "dark" 
-                    ? "text-gray-200 hover:bg-gray-700" 
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-                onClick={() => setShowMoreOptions(false)}
-              >
-                <FiEdit className="mr-2" />
-                Edit Video
-              </Link>
-              
-
-  <Link
-                to={`/videos-manage`}
-                className={`items-center flex px-4 py-2 text-sm ${
-                  theme === "dark" 
-                    ? "text-gray-200 hover:bg-gray-700" 
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-                onClick={() => setShowMoreOptions(false)}
-              >
-                <FiVideo className="mr-2" />
-                Manage Video
-              </Link>
-              
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </motion.div>
-        )}
-      </div>
-    )}
-  </div>
-</div>
 
             {/* Channel Info */}
             <div
@@ -860,24 +936,26 @@ setComments(commentsRes?.data?.data?.comments?.map(comment => ({
                                 {comment.content}
                               </p>
                               <div className="flex items-center mt-2 space-x-4">
-                               <button
-  onClick={() => handleCommentLike(comment._id)}
-  className={`flex items-center space-x-1 ${
-    comment.isLiked
-      ? "text-red-500"
-      : theme === "dark"
-      ? "text-gray-400"
-      : "text-gray-500"
-  }`}
->
-  <FiHeart
-    className={comment.isLiked ? "fill-current" : ""}
-    size={16}
-  />
-  <span className="text-sm">
-    {comment.likeCount || 0}
-  </span>
-</button>
+                                <button
+                                  onClick={() => handleCommentLike(comment._id)}
+                                  className={`flex items-center space-x-1 ${
+                                    comment.isLiked
+                                      ? "text-red-500"
+                                      : theme === "dark"
+                                      ? "text-gray-400"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  <FiHeart
+                                    className={
+                                      comment.isLiked ? "fill-current" : ""
+                                    }
+                                    size={16}
+                                  />
+                                  <span className="text-sm">
+                                    {comment.likeCount || 0}
+                                  </span>
+                                </button>
                               </div>
                             </>
                           )}
@@ -904,6 +982,79 @@ setComments(commentsRes?.data?.data?.comments?.map(comment => ({
         message="Are you sure you want to delete this comment?"
         theme={theme}
       />
+
+              {showPlaylistModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className={`w-full max-w-md rounded-lg p-6 ${
+      theme === "dark" ? "bg-gray-800" : "bg-white"
+    }`}>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Add to Playlist</h2>
+        <button
+          onClick={() => setShowPlaylistModal(false)}
+          className={`p-1 rounded-full ${
+            theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-200"
+          }`}
+        >
+          <FiX />
+        </button>
+      </div>
+      
+      {playlistsLoading ? (
+        <div className="flex justify-center py-8">
+          <LoadingSpinner size="sm" />
+        </div>
+      ) : playlists.length === 0 ? (
+        <div className={`text-center py-6 rounded-lg ${
+          theme === "dark" ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500"
+        }`}>
+          <FiList size={32} className="mx-auto mb-3" />
+          <h3 className="text-lg font-medium">No playlists found</h3>
+          <p>Create a playlist first</p>
+          <Link
+            to="/playlists"
+            className={`mt-4 inline-block px-4 py-2 rounded-full ${
+              theme === "dark" ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-500 hover:bg-purple-600"
+            } text-white`}
+          >
+            Create Playlist
+          </Link>
+        </div>
+      ) : (
+        <div className="max-h-96 overflow-y-auto">
+          {playlists?.map((playlist) => (
+            <div
+              key={playlist._id}
+              className={`p-3 rounded-lg mb-2 flex justify-between items-center ${
+                theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"
+              }`}
+            >
+              <div>
+                <h3 className="font-medium">{playlist.name}</h3>
+                <p className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  {playlist.videos?.length || 0} videos
+                </p>
+              </div>
+              <button
+                onClick={() => handleAddToPlaylist(playlist._id)}
+                className={`px-3 py-1 rounded-full text-sm ${
+                  theme === "dark" 
+                    ? "bg-purple-600 hover:bg-purple-700" 
+                    : "bg-purple-500 hover:bg-purple-600"
+                } text-white`}
+              >
+                Add
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

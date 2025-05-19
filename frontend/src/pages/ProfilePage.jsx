@@ -14,10 +14,13 @@ import {
   FiHeart,
   FiKey,
   FiMessageSquare,
+  FiList,
+  FiTwitter,
 } from "react-icons/fi";
 import { fetchUserVideos, fetchUserByUsername } from "../api/videoService.js";
 import { fetchLikedVideos } from "../api/likeService.js";
 import { getUserTweets, createTweet } from "../api/tweetService.js";
+import { getUserPlaylists } from "../api/playlistService.js";
 import LoadingSpinner from "../components/LoadingSpinner";
 import UpdateAvatar from "./UpdateAvatar";
 import UpdateCoverImage from "./UpdateCoverImage";
@@ -42,6 +45,8 @@ const ProfilePage = () => {
   const [newTweet, setNewTweet] = useState("");
   const [isCreatingTweet, setIsCreatingTweet] = useState(false);
   const [tweetsLoading, setTweetsLoading] = useState(false);
+  const [playlists, setPlaylists] = useState([]);
+  const [playlistsLoading, setPlaylistsLoading] = useState(false);
 
   const isOwner =
     currentUser && profileUser && currentUser._id === profileUser._id;
@@ -107,6 +112,24 @@ const ProfilePage = () => {
       };
 
       loadTweets();
+    }
+  }, [activeTab, isOwner, profileUser?._id]);
+
+  useEffect(() => {
+    if (isOwner && activeTab === "playlists") {
+      const loadPlaylists = async () => {
+        try {
+          setPlaylistsLoading(true);
+          const response = await getUserPlaylists(profileUser._id);
+          setPlaylists(response.data?.playlists || []);
+        } catch (err) {
+          console.error("Error loading playlists:", err);
+        } finally {
+          setPlaylistsLoading(false);
+        }
+      };
+
+      loadPlaylists();
     }
   }, [activeTab, isOwner, profileUser?._id]);
 
@@ -432,31 +455,51 @@ const ProfilePage = () => {
                   <FiHeart className="mr-2" />
                   Liked Videos
                 </button>
+                <button
+                  onClick={() => setActiveTab("tweets")}
+                  className={`text-xl font-bold flex items-center pb-2 border-b-2 whitespace-nowrap ${
+                    activeTab === "tweets"
+                      ? theme === "dark"
+                        ? "border-green-500 text-white"
+                        : "border-green-500 text-gray-900"
+                      : theme === "dark"
+                      ? "border-transparent text-gray-400"
+                      : "border-transparent text-gray-500"
+                  }`}
+                >
+                  <FiTwitter className="mr-2" />
+                  Tweets
+                </button>
+                <button
+                  onClick={() => setActiveTab("playlists")}
+                  className={`text-xl font-bold flex items-center pb-2 border-b-2 whitespace-nowrap ${
+                    activeTab === "playlists"
+                      ? theme === "dark"
+                        ? "border-purple-500 text-white"
+                        : "border-purple-500 text-gray-900"
+                      : theme === "dark"
+                      ? "border-transparent text-gray-400"
+                      : "border-transparent text-gray-500"
+                  }`}
+                >
+                  <FiList className="mr-2" />
+                  Playlists
+                </button>
               </>
             )}
-
-            <button
-              onClick={() => setActiveTab("tweets")}
-              className={`text-xl font-bold flex items-center pb-2 border-b-2 whitespace-nowrap ${
-                activeTab === "tweets"
-                  ? theme === "dark"
-                    ? "border-green-500 text-white"
-                    : "border-green-500 text-gray-900"
-                  : theme === "dark"
-                  ? "border-transparent text-gray-400"
-                  : "border-transparent text-gray-500"
-              }`}
-            >
-              <FiMessageSquare className="mr-2" />
-              Tweets
-            </button>
           </div>
 
           <span className="text-sm hidden sm:block">
             {activeTab === "videos"
               ? `${videos.length} ${videos.length === 1 ? "video" : "videos"}`
-              : `${likedVideos.length} ${
+              : activeTab === "liked"
+              ? `${likedVideos.length} ${
                   likedVideos.length === 1 ? "video" : "videos"
+                }`
+              : activeTab === "tweets"
+              ? `${tweets.length} ${tweets.length === 1 ? "tweet" : "tweets"}`
+              : `${playlists.length} ${
+                  playlists.length === 1 ? "playlist" : "playlists"
                 }`}
           </span>
         </div>
@@ -679,6 +722,93 @@ const ProfilePage = () => {
                       </div>
                     </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : null}
+
+        {activeTab === "playlists" ? (
+          <>
+            {playlistsLoading ? (
+              <div className="flex justify-center py-8">
+                <LoadingSpinner size="sm" />
+              </div>
+            ) : playlists.length === 0 ? (
+              <div
+                className={`text-center py-12 rounded-lg ${
+                  theme === "dark"
+                    ? "bg-gray-800 text-gray-400"
+                    : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                <FiList size={48} className="mx-auto mb-4" />
+                <h3 className="text-lg font-medium">
+                  {isOwner
+                    ? "You don't have any playlists yet"
+                    : "No playlists available"}
+                </h3>
+                {isOwner && (
+                  <Link
+                    to="/playlists"
+                    className={`mt-4 inline-block px-4 py-2 rounded-full ${
+                      theme === "dark"
+                        ? "bg-purple-600 hover:bg-purple-700"
+                        : "bg-purple-500 hover:bg-purple-600"
+                    } text-white`}
+                  >
+                    Create Your First Playlist
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {playlists.map((playlist) => (
+                  <Link
+                    key={playlist._id}
+                    to={`/playlists/${playlist._id}`}
+                    className={`rounded-lg overflow-hidden shadow-lg transition-all duration-300 ${
+                      theme === "dark"
+                        ? "bg-gray-800 hover:bg-gray-750"
+                        : "bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <div
+                      className={`h-40 ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } flex items-center justify-center relative`}
+                    >
+                      {playlist.videos?.length > 0 ? (
+                        <img
+                          src={playlist.videos[0].thumbnail}
+                          alt="Playlist thumbnail"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <FiList
+                          size={48}
+                          className={
+                            theme === "dark" ? "text-gray-500" : "text-gray-400"
+                          }
+                        />
+                      )}
+                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+                        {playlist.videos?.length || 0} videos
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold truncate">
+                        {playlist.title}
+                      </h3>
+                      <p
+                        className={`text-sm mt-1 truncate ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
+                        {playlist.description || "No description"}
+                      </p>
+                    </div>
+                  </Link>
                 ))}
               </div>
             )}

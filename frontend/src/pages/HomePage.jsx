@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { fetchAllVideos } from "../api/videoService";
 import { useTheme } from "../contexts/ThemeContext";
-import { FiUser, FiSearch, FiFilter, FiX, FiMessageSquare, FiHeart } from "react-icons/fi";
+import { FiUser, FiSearch, FiFilter, FiX, FiMessageSquare, FiHeart, FiTwitter } from "react-icons/fi";
 import { getTweets } from "../api/tweetService";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -282,7 +282,7 @@ const HomePage = () => {
                 <h2 className={`text-xl font-semibold flex items-center ${
                   theme === "dark" ? "text-gray-100" : "text-gray-900"
                 }`}>
-                  <FiMessageSquare className="mr-2" />
+                  <FiTwitter className="mr-2" />
                   Recent Tweets
                 </h2>
                 <Link
