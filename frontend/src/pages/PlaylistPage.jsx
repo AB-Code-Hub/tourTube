@@ -79,7 +79,6 @@ const PlaylistPage = () => {
     try {
       setLoading(true);
       const response = await createPlaylist(newPlaylistData);
-      console.log(response);
       
       setPlaylists(prev => [...prev, response.data]);
       setShowCreateForm(false);

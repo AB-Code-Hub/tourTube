@@ -9,9 +9,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 const getChannelStats = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
 
-  // Get all stats in parallel using Promise.all
   const [videoStats, subscriberStats, likesStats] = await Promise.all([
-    // Get video stats (total videos, views, duration)
     Video.aggregate([
       {
         $match: {

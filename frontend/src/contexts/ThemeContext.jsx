@@ -12,7 +12,7 @@ export const ThemeProvider = ({ children }) => {
         ? 'dark' 
         : 'light';
     }
-    return 'light';
+    return 'dark';
   });
 
   // Toggle between dark/light theme

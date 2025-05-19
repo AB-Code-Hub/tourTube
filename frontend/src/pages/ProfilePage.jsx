@@ -24,8 +24,9 @@ import { getUserPlaylists } from "../api/playlistService.js";
 import LoadingSpinner from "../components/LoadingSpinner";
 import UpdateAvatar from "./UpdateAvatar";
 import UpdateCoverImage from "./UpdateCoverImage";
-import { subscribeToChannel } from "../api/subscriptionService";
+import { channelStats, subscribeToChannel } from "../api/subscriptionService";
 import VideoGrid from "../components/VideoGrid.jsx";
+import ChannelStats from "../components/ChannelStats.jsx";
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -47,6 +48,7 @@ const ProfilePage = () => {
   const [tweetsLoading, setTweetsLoading] = useState(false);
   const [playlists, setPlaylists] = useState([]);
   const [playlistsLoading, setPlaylistsLoading] = useState(false);
+  const [channelStatsData, setChannelStatsData] = useState(null);
 
   const isOwner =
     currentUser && profileUser && currentUser._id === profileUser._id;
@@ -96,13 +98,12 @@ const ProfilePage = () => {
       loadLikedVideos();
     }
   }, [activeTab, isOwner]);
-
   useEffect(() => {
-    if (isOwner && activeTab === "tweets") {
+    if (activeTab === "tweets" && profileUser?._id) {
       const loadTweets = async () => {
         try {
           setTweetsLoading(true);
-          const response = await getUserTweets(profileUser?._id);
+          const response = await getUserTweets(profileUser._id);
           setTweets(response.data?.data?.tweets || []);
         } catch (err) {
           console.error("Error loading tweets:", err);
@@ -113,10 +114,9 @@ const ProfilePage = () => {
 
       loadTweets();
     }
-  }, [activeTab, isOwner, profileUser?._id]);
-
+  }, [activeTab, profileUser?._id]);
   useEffect(() => {
-    if (isOwner && activeTab === "playlists") {
+    if (activeTab === "playlists" && profileUser?._id) {
       const loadPlaylists = async () => {
         try {
           setPlaylistsLoading(true);
@@ -131,7 +131,20 @@ const ProfilePage = () => {
 
       loadPlaylists();
     }
-  }, [activeTab, isOwner, profileUser?._id]);
+  }, [activeTab, profileUser?._id]);
+  useEffect(() => {
+    const loadChannelStats = async () => {
+      try {
+        if (isOwner) {
+          const response = await channelStats();
+          setChannelStatsData(response.data?.data);
+        }
+      } catch (error) {
+        console.error("fetching channel stats failed", error);
+      }
+    };
+    loadChannelStats();
+  }, [isOwner]);
 
   const handleCreateTweet = async () => {
     if (!newTweet.trim()) return;
@@ -215,7 +228,6 @@ const ProfilePage = () => {
           />
         )}
       </div>
-
       {/* Profile Header */}
       <div className="container mx-auto px-4 -mt-16 relative z-10">
         <div
@@ -270,7 +282,11 @@ const ProfilePage = () => {
               </p>
 
               {/* User stats */}
-              <div className="flex space-x-4 mt-2 text-sm">
+              <div
+                className={`flex space-x-4 mt-2 text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 <span>{videos.length} videos</span>
                 <span>{profileUser?.subscribersCount || 0} subscribers</span>
                 {!isOwner && (
@@ -319,7 +335,7 @@ const ProfilePage = () => {
                       className={`p-2 rounded-full ${
                         theme === "dark"
                           ? "bg-gray-700 hover:bg-gray-600"
-                          : "bg-gray-200 hover:bg-gray-300"
+                          : "bg-gray-400 hover:bg-gray-500"
                       }`}
                     >
                       <FiMoreHorizontal size={20} />
@@ -413,7 +429,6 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-
       {/* Videos Section */}
       <div className="container mx-auto px-4 py-8">
         <div
@@ -439,54 +454,54 @@ const ProfilePage = () => {
             </button>
 
             {isOwner && (
-              <>
-                <button
-                  onClick={() => setActiveTab("liked")}
-                  className={`text-xl font-bold flex items-center pb-2 border-b-2 whitespace-nowrap ${
-                    activeTab === "liked"
-                      ? theme === "dark"
-                        ? "border-red-500 text-white"
-                        : "border-red-500 text-gray-900"
-                      : theme === "dark"
-                      ? "border-transparent text-gray-400"
-                      : "border-transparent text-gray-500"
-                  }`}
-                >
-                  <FiHeart className="mr-2" />
-                  Liked Videos
-                </button>
-                <button
-                  onClick={() => setActiveTab("tweets")}
-                  className={`text-xl font-bold flex items-center pb-2 border-b-2 whitespace-nowrap ${
-                    activeTab === "tweets"
-                      ? theme === "dark"
-                        ? "border-green-500 text-white"
-                        : "border-green-500 text-gray-900"
-                      : theme === "dark"
-                      ? "border-transparent text-gray-400"
-                      : "border-transparent text-gray-500"
-                  }`}
-                >
-                  <FiTwitter className="mr-2" />
-                  Tweets
-                </button>
-                <button
-                  onClick={() => setActiveTab("playlists")}
-                  className={`text-xl font-bold flex items-center pb-2 border-b-2 whitespace-nowrap ${
-                    activeTab === "playlists"
-                      ? theme === "dark"
-                        ? "border-purple-500 text-white"
-                        : "border-purple-500 text-gray-900"
-                      : theme === "dark"
-                      ? "border-transparent text-gray-400"
-                      : "border-transparent text-gray-500"
-                  }`}
-                >
-                  <FiList className="mr-2" />
-                  Playlists
-                </button>
-              </>
+              <button
+                onClick={() => setActiveTab("liked")}
+                className={`text-xl font-bold flex items-center pb-2 border-b-2 whitespace-nowrap ${
+                  activeTab === "liked"
+                    ? theme === "dark"
+                      ? "border-red-500 text-white"
+                      : "border-red-500 text-gray-900"
+                    : theme === "dark"
+                    ? "border-transparent text-gray-400"
+                    : "border-transparent text-gray-500"
+                }`}
+              >
+                <FiHeart className="mr-2" />
+                Liked Videos
+              </button>
             )}
+
+            <button
+              onClick={() => setActiveTab("tweets")}
+              className={`text-xl font-bold flex items-center pb-2 border-b-2 whitespace-nowrap ${
+                activeTab === "tweets"
+                  ? theme === "dark"
+                    ? "border-green-500 text-white"
+                    : "border-green-500 text-gray-900"
+                  : theme === "dark"
+                  ? "border-transparent text-gray-400"
+                  : "border-transparent text-gray-500"
+              }`}
+            >
+              <FiTwitter className="mr-2" />
+              Tweets
+            </button>
+
+            <button
+              onClick={() => setActiveTab("playlists")}
+              className={`text-xl font-bold flex items-center pb-2 border-b-2 whitespace-nowrap ${
+                activeTab === "playlists"
+                  ? theme === "dark"
+                    ? "border-purple-500 text-white"
+                    : "border-purple-500 text-gray-900"
+                  : theme === "dark"
+                  ? "border-transparent text-gray-400"
+                  : "border-transparent text-gray-500"
+              }`}
+            >
+              <FiList className="mr-2" />
+              Playlists
+            </button>
           </div>
 
           <span className="text-sm hidden sm:block">
@@ -579,7 +594,7 @@ const ProfilePage = () => {
                   className={`w-full p-3 rounded-lg border focus:outline-none focus:ring-2 ${
                     theme === "dark"
                       ? "bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500/30"
-                      : "bg-white border-gray-300 focus:border-green-400 focus:ring-green-400/30"
+                      : "bg-white text-gray-500 border-gray-300 focus:border-green-400 focus:ring-green-400/30"
                   }`}
                   rows="3"
                   value={newTweet}
@@ -646,7 +661,9 @@ const ProfilePage = () => {
                   <div
                     key={tweet._id}
                     className={`p-4 rounded-lg ${
-                      theme === "dark" ? "bg-gray-800" : "bg-white border"
+                      theme === "dark"
+                        ? "bg-gray-800"
+                        : "bg-white text-gray-700 border"
                     }`}
                   >
                     <div className="flex items-start space-x-3">
@@ -770,7 +787,7 @@ const ProfilePage = () => {
                     className={`rounded-lg overflow-hidden shadow-lg transition-all duration-300 ${
                       theme === "dark"
                         ? "bg-gray-800 hover:bg-gray-750"
-                        : "bg-white hover:bg-gray-50"
+                        : "bg-white text-gray-700 hover:bg-gray-50"
                     }`}
                   >
                     <div
@@ -798,7 +815,7 @@ const ProfilePage = () => {
                     </div>
                     <div className="p-4">
                       <h3 className="font-semibold truncate">
-                        {playlist.title}
+                        {playlist.name}
                       </h3>
                       <p
                         className={`text-sm mt-1 truncate ${
@@ -814,15 +831,18 @@ const ProfilePage = () => {
             )}
           </>
         ) : null}
-      </div>
-
+      </div>{" "}
+      {isOwner && channelStatsData && (
+        <div className="container mx-auto px-4 py-8">
+          <ChannelStats data={channelStatsData} />
+        </div>
+      )}
       {/* Modals */}
       {isAvatarModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
           <UpdateAvatar onClose={() => setIsAvatarModalOpen(false)} />
         </div>
       )}
-
       {isCoverModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
           <UpdateCoverImage onClose={() => setIsCoverModalOpen(false)} />

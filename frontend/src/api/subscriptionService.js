@@ -16,4 +16,8 @@ const userSubscribedChannels = async () => {
   return await client.get(`/subscriptions/user/subscribed`);
 }
 
-export { subscribeToChannel, checkSubscription, channelSubcribers, userSubscribedChannels }
+const channelStats = async () => {
+  return await client.get(`/dashboard/stats`);
+}
+
+export { subscribeToChannel, checkSubscription, channelSubcribers, userSubscribedChannels, channelStats }

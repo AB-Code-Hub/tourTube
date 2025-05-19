@@ -5,14 +5,18 @@ import { useTheme } from "../contexts/ThemeContext";
 import { 
   FiMenu, FiX, FiUser, FiUpload, FiLogOut, 
   FiSun, FiMoon, FiClock, FiHome, FiSearch,
-  FiTwitter
+  FiTwitter,
+  FiBell
 } from "react-icons/fi";
+import { userSubscribedChannels } from "../api/subscriptionService";
+
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [subscriptionCount, setSubscriptionCount] = useState(null)
   const navigate = useNavigate();
 
   // Close dropdown when clicking outside
@@ -26,6 +30,19 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const getSubscriptions = async () => {
+      try {
+        const response = await userSubscribedChannels()
+        setSubscriptionCount(response.data?.data?.totalSubscriptions)
+        
+      } catch (error) {
+        
+      }
+    }
+    getSubscriptions()
+  },[user])
 
   const handleLogout = async () => {
     await logout();
@@ -82,19 +99,27 @@ export default function Navbar() {
                 <span>Home</span>
               </Link>
 
+                      <Link
+            to="/subscriptions"
+            className={`p-2 rounded-full relative ${
+              theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+            }`}
+          >
+            <FiBell size={20} />
+            {subscriptionCount > 0 && (
+              <span className={`absolute -top-1 -right-1 text-xs px-1.5 rounded-full ${
+                theme === 'dark' ? 'bg-red-600 text-white' : 'bg-red-500 text-white'
+              }`}>
+                {subscriptionCount}
+              </span>
+            )}
+          </Link>
+
           
               
               {user && (
                 <>
-                  <Link 
-                    to="/watch-history" 
-                    className={`flex items-center space-x-1 font-medium ${
-                      theme === 'dark' ? 'hover:text-blue-400' : 'hover:text-blue-600'
-                    }`}
-                  >
-                    <FiClock size={18} />
-                    <span>History</span>
-                  </Link>
+                  
                   <Link 
                     to="/upload" 
                     className={`flex items-center space-x-1 font-medium ${
@@ -171,6 +196,17 @@ export default function Navbar() {
                     >
                       <FiUser className="mr-2" /> Your Profile
                     </Link>
+                    <Link 
+                    to="/watch-history" 
+                   className={`flex items-center px-4 py-2 text-sm ${
+                        theme === 'dark' 
+                          ? 'hover:bg-gray-700' 
+                          : 'hover:bg-gray-100'
+                      }`}
+                  >
+                    <FiClock size={18} className="mr-2"/>
+                    <span>History</span>
+                  </Link>
                     <button
                       onClick={handleLogout}
                       className={`flex items-center w-full px-4 py-2 text-sm ${
@@ -250,6 +286,16 @@ export default function Navbar() {
                   <FiUpload className="mr-2" /> Upload Video
                 </Link>
 
+                       <Link
+                  to="/subscriptions"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
+                    theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <FiBell className="mr-2" /> Subscription
+                </Link>
+
                   <Link
                   to="/tweets"
                   onClick={() => setIsOpen(false)}
@@ -270,6 +316,9 @@ export default function Navbar() {
                 >
                   <FiUser className="mr-2" /> Your Profile
                 </Link>
+
+           
+
               </>
             )}
 

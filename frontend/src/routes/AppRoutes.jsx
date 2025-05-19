@@ -22,6 +22,7 @@ import EditVideo from "../components/EditVideo";
 import TweetPage from "../pages/TweetPage";
 import ViewAllTweetsPage from "../pages/ViewAllTweetsPage";
 import PlaylistPage from "../pages/PlaylistPage";
+import SubscriptionsPage from "../pages/SubscriptionsPage";
 const VideoPage = lazy(() => import("../pages/VideoPage"));
 const HomePage = lazy(() => import("../pages/HomePage"));
 
@@ -86,6 +87,8 @@ export default function AppRoutes() {
                       path="/playlists/:playlistId"
                       element={<PlaylistPage />}
                     />
+
+                    <Route path="/subscriptions" element={<SubscriptionsPage />} />
                   </Route>
 
                   {/* Error Handling */}

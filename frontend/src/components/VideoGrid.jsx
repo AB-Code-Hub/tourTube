@@ -85,7 +85,9 @@ const VideoGrid = ({ videos, theme, showRemove = false, onRemove = null }) => {
                 )}
               </Link>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold line-clamp-2 text-sm">
+                <h3 className={`font-semibold line-clamp-2 text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}>
                   {video.title}
                 </h3>
                 <Link
